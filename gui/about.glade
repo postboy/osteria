@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.16.1 -->
+<interface>
+  <requires lib="gtk+" version="3.10"/>
+  <object class="GtkAboutDialog" id="about_window">
+    <property name="can_focus">False</property>
+    <property name="window_position">center</property>
+    <property name="icon_name">mail-forward</property>
+    <property name="type_hint">dialog</property>
+    <property name="gravity">north</property>
+    <property name="program_name">Osteria 0.08</property>
+    <property name="version">программа защищённого обмена мгновенными сообщениями</property>
+    <property name="copyright" translatable="yes">(c) 2014-2015, Зубов Иван</property>
+    <property name="website">https://github.com/postboy/osteria</property>
+    <property name="website_label" translatable="yes">Репозиторий на Github</property>
+    <property name="logo_icon_name">mail-forward</property>
+    <property name="license_type">bsd</property>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="about_vbox">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">5</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="about_body">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
