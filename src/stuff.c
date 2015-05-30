@@ -1,29 +1,29 @@
 /*
-stuff.c - вспомогательный функционал Osteria
-Лицензия: BSD 2-Clause
+stuff.c - additional functions of Osteria
+License: BSD 2-Clause
 */
 
 #include "stuff.h"
-#include "crypto.h"	//подключаем этот заголовочный файл для вызова функций из crypto.c
+#include "crypto.h"	//we have to include it for using functions from crypto.c
 
-//--ПОЛУЧИТЬ ЗАПИСЬ SOCKADDR ДЛЯ IPv4 ИЛИ IPv6-----------------------------------------------------
+//--GET SOCKADDR RECORD FOR IPv4 OR IPv6-----------------------------------------------------------
 
 void *get_in_addr (struct sockaddr *sa)
 {
-	//если имеем дело с IPv4, то используем соответствующий вариант обращения
+	//if we use IPv4, act accordingly
 	if (sa->sa_family == AF_INET)
 		return &(((struct sockaddr_in*)sa)->sin_addr);
 
-	//иначе используем вариант обращения для случая IPv6
+	//if not then we use IPv6, act accordingly
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-//--УСТАНОВКА СОЕДИНЕНИЯ В РЕЖИМЕ "СЕРВЕР"---------------------------------------------------------
+//--MAKE CONNECION AS SERVER-----------------------------------------------------------------------
 
 int go_server (unsigned int serv_port, int mode)
 {
 
-//--запуск сервера---------------------------------------------------------------------------------
+//--server launch---------------------------------------------------------------------------------
 
 char serv_port_str[10], cliaddr[INET6_ADDRSTRLEN]; //строка-номер порта сервера, строка-адрес клиента
 int fresult, listensock, sock, cliport;
@@ -38,7 +38,7 @@ socklen_t clinfo_size=sizeof clinfo;
 struct sockaddr_in *s;		//временная запись для добычи IP-адреса и порта клиента из clinfo
 char datetime_str[50]; 		//текущие дата и время в строке
 
-printf("Запуск сервера на порте %i...\n",serv_port);
+printf("Launching server on %i port...\n",serv_port);
 
 //настройка параметров сокета
 memset(&hints, 0, sizeof hints);		//обнуляем запись с параметрами сокета
@@ -48,14 +48,14 @@ hints.ai_flags = AI_PASSIVE;			//автоматическое заполнени
 
 //перевод номера порта сервера из int в char, необходимый для функции getaddrinfo()
 if (snprintf(serv_port_str, 10, "%d", serv_port)<0) {
-	fprintf(stderr,"Ошибка snprintf(serv_port)\n");
+	fprintf(stderr,"snprintf(serv_port) error\n");
 	return 1;
 	}
 
 /*создаём запись servinfo с заданными настройками: IP-адрес - IP текущего устройства, порт -
 заданный ранее, настройки заданы в записи hints*/
 if ((fresult = getaddrinfo(NULL, serv_port_str, &hints, &servinfo)) != 0) {
-	fprintf(stderr, "Ошибка getaddrinfo(): %s\n", gai_strerror(fresult));
+	fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(fresult));
 	//очищаем информацию о сервере, чтобы избежать утечек памяти; в дальнейшем поступаем так же
 	freeaddrinfo(servinfo);
 	return 1;
@@ -66,24 +66,24 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 
 	//создаём сокет, который будет ожидать подключения
 	if ((listensock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
-		perror("Ошибка socket()");
+		perror("socket() error");
 		continue;
 		}
 
-	/*разрешаем повторное использование порта, чтобы избежать ошибки "Ошибка bind(): Address
+	/*разрешаем повторное использование порта, чтобы избежать ошибки "bind() error: Address
 	already in use". она появляется при попытке перезапуске сервера спустя (примерно) менее минуты
 	после его закрытия. ошибка здесь не будет критичной, так что не завершаем работу. при
 	параноидальной заботе о приватности стоит убрать этот код.*/
 	if (setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0) {
-		perror("Ошибка setsockopt()");
+		perror("setsockopt() error");
 		continue;
 		}
 
 	//привязываем созданный сокет к заданному ранее порту на нашем устройстве
 	if ((bind(listensock, servinfo->ai_addr, servinfo->ai_addrlen)) != 0) {
-		perror("Ошибка bind()");
+		perror("bind() error);
 		//напоследок закрываем открытый сокет
-		if (close(listensock) != 0) perror("Ошибка close(listensock)");
+		if (close(listensock) != 0) perror("close(listensock) error");
 		continue;
 		}//if bind()
 		
@@ -93,7 +93,7 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 
 //если нам не удалось осуществить привязку, выдаём об этом сообщение и завершаем программу
 if (p == NULL)  {
-	fprintf(stderr, "Ошибка: не удалось осуществить привязку ни к одному порту.\n");
+	fprintf(stderr, "Error: can't bind to that port.\n");
 	freeaddrinfo(servinfo);
 	return 1;
 	}
@@ -103,22 +103,22 @@ freeaddrinfo(servinfo);
 
 //ожидаем одного входящего соединения
 if ((listen(listensock, 1)) != 0) {
-	perror("Ошибка listen()");
-	if (close(listensock) != 0) perror("Ошибка close(listensock)");
+	perror("listen() error");
+	if (close(listensock) != 0) perror("close(listensock) error");
 	return 1;
 	}
 
 //принимаем входящее соединение, получая новый сокет для общения с клиентом
 if ((sock = accept(listensock, (struct sockaddr *)&clinfo, &clinfo_size)) == -1) {
-	perror("Ошибка accept()");
-	if (close(listensock) != 0) perror("Ошибка close(listensock)");
+	perror("accept() error");
+	if (close(listensock) != 0) perror("close(listensock) error");
 	return 1;
 	}
 
 /*закрываем сокет, ожидавший соединения, так как общение происходит через другой сокет. ошибка
 здесь не будет критичной, так что не завершаем работу. при повышенной заботе о приватности стоит
 изменить код: в случае ошибки закрыть новый сокет sock и завершить программу возвратом 1.*/
-if (close(listensock) != 0) perror("Ошибка close(listensock)");
+if (close(listensock) != 0) perror("close(listensock) error");
 
 //вытаскиваем из записи clinfo IP-адрес и порт подключившегося устройства для вывода на экран
 s = (struct sockaddr_in *)&clinfo;
@@ -134,7 +134,7 @@ printf("Клиент %s порт %i успешно подключился в %s"
 return sock;
 }
 
-//--УСТАНОВКА СОЕДИНЕНИЯ В РЕЖИМЕ "КЛИЕНТ"---------------------------------------------------------
+//--MAKE CONNECION AS CLIENT-----------------------------------------------------------------------
 
 int go_client (const char *server_address, unsigned int serv_port, int mode)
 {
@@ -146,10 +146,10 @@ struct sockaddr_in6 sa;	//запись для проверки и хранени
 fresult = inet_pton(mode, server_address, &(sa.sin6_addr));
 switch(fresult)
 	{case 0: {
-		fprintf(stderr, "Ошибка inet_pton(): введён неверный IP-адрес.\n");
+		fprintf(stderr, "inet_pton() error: invalid IP address.\n");
 		return 1;};
 	case -1: {
-		perror("Ошибка inet_pton()");
+		perror("inet_pton() error");
 		return 1;};
 	}
 
@@ -170,14 +170,14 @@ hints.ai_socktype = SOCK_STREAM;		//используем потоковый со
 
 //перевод из int в char, необходимый для функции getaddrinfo()
 if (snprintf(serv_port_str, 10, "%d", serv_port)<0)
-	{fprintf(stderr,"Ошибка snprintf(serv_port)\n");
+	{fprintf(stderr,"snprintf(serv_port) error\n");
 	return 1;
 	}
 
 /*создаём запись servinfo с заданными настройками: IP-адрес - IP сервера, порт - заданный ранее,
 настройки заданы в записи hints*/
 if ((fresult = getaddrinfo(server_address, serv_port_str, &hints, &servinfo)) != 0) {
-	fprintf(stderr, "Ошибка getaddrinfo(): %s\n", gai_strerror(fresult));
+	fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(fresult));
 	//напоследок очищаем информацию о сервере, чтобы избежать утечек памяти
 	freeaddrinfo(servinfo);
 	return 1;
@@ -189,17 +189,17 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 
 	//создаём сокет для последующей работы с ним, используя запись servinfo
 	if ((sock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
-		perror("Ошибка socket()");
+		perror("socket() error");
 		freeaddrinfo(servinfo);
 		continue;
 		}
 
 	//устанавливаем соединение с сервером по заданному адресу и порту
 	if ((connect(sock, servinfo->ai_addr, servinfo->ai_addrlen)) != 0) {
-		perror("Ошибка connect()");
+		perror("connect() error");
 		freeaddrinfo(servinfo);
 		//напоследок закрываем открытый сокет
-		if (close(sock) != 0) perror("Ошибка close()");
+		if (close(sock) != 0) perror("close() error");
 		continue;
 		}//if connect()
 		
@@ -209,7 +209,7 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 	
 //если нам не удалось осуществить подключение, выдаём об этом сообщение и завершаем программу
 if (p == NULL)  {
-	fprintf(stderr, "Ошибка: не удалось осуществить подключение.\n");
+	fprintf(stderr, "Error: cannot connect to server.\n");
 	return 1;
 	}
 
@@ -225,7 +225,7 @@ printf("Подключение успешно выполенено в %s",dateti
 return sock;
 }
 
-//--ПЕРЕДАЧА ВСЕГО СООБЩЕНИЯ-----------------------------------------------------------------------
+//--SEND THE WHOLE MESSAGE-----------------------------------------------------------------------
 
 /*эта функция заставляет функцию send() попытаться передать всё сообщение, что не предусмотрено по
 умолчанию*/
@@ -245,58 +245,59 @@ while(total < len) {
     return fresult==-1?-1:0;	//возвращаем -1 при ошибке, 0 при успешном выполнении
 }
 
-//--УЗНАТЬ ДАТУ И ВРЕМЯ----------------------------------------------------------------------------
+//--GET DATE AND TIME------------------------------------------------------------------------------
 
 int datetime (char datetime_str[50])
 {
 
-//переменные для получения и хранения текущих даты и времени
 time_t timer;
 struct tm *tm_now;
 
-//узнаём текущее время и дату, переводим их в строку
+//get current date and time
 if (time(&timer) == ((time_t)-1)) {			
-	perror("Ошибка time()");
+	perror("time() error");
 	return 1;
 	};
 
 if (localtime(&timer) == NULL) {
-	fprintf(stderr, "Ошибка localtime()\n");
+	fprintf(stderr, "localtime()  error\n");
 	return 1;
 	};
 tm_now = localtime(&timer);
 
+//convert it to string
 if (strftime(datetime_str, 50, "%H:%M %d.%m.%y.\n", tm_now) == 0) {
-	fprintf(stderr, "Ошибка strftime(datetime)");
+	fprintf(stderr, "strftime(datetime) error\n");
 	return 1;
 	};
 
 return 0;
 }
 
-//--УЗНАТЬ ВРЕМЯ ДЛЯ ПОКАЗА В БЕСЕДЕ---------------------------------------------------------------
+//--GET TIME---------------------------------------------------------------------------------------
 
 int time_talk (char time_str[15])
 {
 
-//переменные для получения и хранения текущих даты и времени
 time_t timer;
 struct tm *tm_now;
 
-//узнаём текущее время и дату, переводим их в строку
+//get current time
 if (time(&timer) == ((time_t)-1)) {			
-	perror("Ошибка time()");
+	perror("time() error");
 	return 1;
 	};
 
 if (localtime(&timer) == NULL) {
-	fprintf(stderr, "Ошибка localtime()\n");
+	fprintf(stderr, "localtime() error\n");
 	return 1;
 	};
 
 tm_now = localtime(&timer);
+
+//convert it to string
 if (strftime(time_str, 15, " [%H:%M]\n", tm_now) == 0) {
-	fprintf(stderr, "Ошибка strftime(time)\n");
+	fprintf(stderr, "strftime(time) error\n");
 	return 1;
 	};
 

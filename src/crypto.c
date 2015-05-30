@@ -1,11 +1,11 @@
 /*
-crypto.c - вспомогательный криптографический функционал Osteria
-Лицензия: BSD 2-Clause
+crypto.c - cryptographic functions of Osteria
+License: BSD 2-Clause
 */
 
 #include "crypto.h"
 
-//--ПОСЧИТАТЬ ХЕШ ОТ ПУБЛИЧНЫХ КЛЮЧЕЙ ЭП И ШИФРОВАНИЯ----------------------------------------------
+//--GET HASH OF SIGNATURE AND ENCRYPTION PUBLIC KEYS-----------------------------------------------
 
 void get_pubkeys_hash (unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char x_sp[crypto_sign_PUBLICKEYBYTES],
@@ -50,7 +50,7 @@ memcpy(out_h, h, crypto_hash_BYTES);
     
 }
 
-//--ГЕНЕРАЦИЯ ФАЙЛОВ С ПОСТОЯННЫМИ КЛЮЧАМИ---------------------------------------------------------
+//--GENERATION OF FILES WITH PERSISTENT KEYS-------------------------------------------------------
 
 int generate_key_files (const char *companion_name)
 {
@@ -83,7 +83,7 @@ strncat(path, "/my_public", 10);
 //если папка my_public не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(my_public)");
+    	perror("mkdir(my_public) error");
     	return 1;
 	   	}
 
@@ -92,26 +92,26 @@ strncat(path, "/public.keys", 12);
 
 //пытаемся открыть бинарный файл public.keys для записи
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_public/public.keys для записи.\n");
+	fprintf(stderr, "Error: cannot open file my_public/public.keys for writing.\n");
     return 1;
 	}
 
 //записываем наши публичные ключи ЭП и шифрования в файл
 bytes_real = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
 if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_sp в my_public/public.keys.\n");
+	fprintf(stderr, "Error: cannot write m_sp in my_public/public.keys.\n");
 	fclose(fp);
     return 1;
 	}
 bytes_real = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
 if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_cp в my_public/public.keys.\n");
+	fprintf(stderr, "Error: cannot write m_cp in my_public/public.keys.\n");
 	fclose(fp);
     return 1;
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_public/public.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
 //--записываем наши секретные ключи----------------------------------------------------------------
 
@@ -122,7 +122,7 @@ strncat(path, "/my_secret", 10);
 //если папка my_secret не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(my_secret)");
+    	perror("mkdir(my_secret) error");
     	return 1;
 	   	}
 
@@ -131,26 +131,26 @@ strncat(path, "/secret.keys", 12);
 
 //пытаемся открыть бинарный файл secret.keys для записи
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_secret/secret.keys для записи.\n");
+	fprintf(stderr, "Error: cannot open file my_secret/secret.keys for writing.\n");
     return 1;
 	}
 
 //записываем наши секретные ключи ЭП и шифрования в файл
 bytes_real = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
 if (bytes_real < crypto_sign_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_ss в my_secret/secret.keys.\n");
+	fprintf(stderr, "Error: cannot write m_ss in my_secret/secret.keys.\n");
 	fclose(fp);
     return 1;
 	}
 bytes_real = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
 if (bytes_real < crypto_box_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_cs в my_secret/secret.keys.\n");
+	fprintf(stderr, "Error: cannot write m_cs in my_secret/secret.keys.\n");
 	fclose(fp);
     return 1;
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_secret/secret.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
 //--создаём папку для публичных ключей собеседника--------------------------------------------------
 
@@ -161,14 +161,14 @@ strncat(path, "/ext_public", 11);
 //если папка ext_public не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(ext_public)");
+    	perror("mkdir(ext_public) error");
     	return 1;
 	   	}
 
 return 0;
 }
 
-//--СОХРАНЕНИЕ В ФАЙЛЫ ПОСТОЯННЫХ КЛЮЧЕЙ ТЕКУЩЕГО СЕАНСА-------------------------------------------
+//--SAVING CURRENT SESSION'S PERSISTENT KEYS TO FILES----------------------------------------------
 
 int save_current_keys (const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_ss[crypto_sign_SECRETKEYBYTES],
@@ -195,7 +195,7 @@ strncat(path, "/my_public", 11);
 //если папка ext_public не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(my_public)");
+    	perror("mkdir(my_public) error");
     	return 1;
 	   	}
 
@@ -223,7 +223,7 @@ if (bytes_real < crypto_box_PUBLICKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_public/public.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
 //--записываем наши секретные ключи----------------------------------------------------------------
 
@@ -234,7 +234,7 @@ strncat(path, "/my_secret", 10);
 //если папка my_secret не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(my_secret)");
+    	perror("mkdir(my_secret) error");
     	return 1;
 	   	}
 
@@ -262,7 +262,7 @@ if (bytes_real < crypto_box_SECRETKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_secret/secret.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
 //--записываем публичные ключи собеседника---------------------------------------------------------
 
@@ -273,7 +273,7 @@ strncat(path, "/ext_public", 11);
 //если папка ext_public не создана, то пытаемся создать её
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
-    	perror("Ошибка mkdir(ext_public)");
+    	perror("mkdir(ext_public) error");
     	return 1;
 	   	}
 
@@ -301,14 +301,14 @@ if (bytes_real < crypto_box_PUBLICKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(ext_public/public.keys)");
+if (fclose(fp) == EOF) perror("fclose(ext_public/public.keys) error");
 
 printf("Постоянные ключи для общения с %s успешно сохранены.\n\n", companion_name);
 
 return 0;
 }
 
-//--ЗАГРУЗИТЬ ПОСТОЯННЫЕ КЛЮЧИ ИЗ ФАЙЛОВ НА ДИСКЕ--------------------------------------------------
+//--LOAD PERSISTENT KEYS FROM FILES----------------------------------------------------------------
 
 int load_key_files (const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
@@ -339,7 +339,7 @@ h[crypto_hash_BYTES];	//хеш от публичных ключей
 
 //при отсуствии папки keys выдаём ошибку
 if (stat("keys", &st) == -1) {
-   	perror("Ошибка stat(keys)");
+   	perror("stat(keys) error");
    	return 1;
    	}
 
@@ -348,7 +348,7 @@ strncat(path_master, companion_name, 30);
 
 //при отсуствии папки для собеседника с таким именем выдаём ошибку
 if (stat(path_master, &st) == -1) {
-	perror("Ошибка stat(user)");
+	perror("stat(user) error");
 	return 1;
 	}
 
@@ -360,7 +360,7 @@ strncat(path, "/my_public", 11);
 
 //если папка ext_public не создана, то пытаемся создать её
 if (stat(path, &st) == -1) {
-   	perror("Ошибка stat(my_public)");
+   	perror("stat(my_public) error");
    	return 1;
    	}
 
@@ -388,7 +388,7 @@ if (bytes_real < crypto_box_PUBLICKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_public/public.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
 //--считываем наши секретные ключи-----------------------------------------------------------------
 
@@ -398,7 +398,7 @@ strncat(path, "/my_secret", 10);
 
 //при отсуствии папки my_secret выдаём ошибку
 if (stat(path, &st) == -1) {
-	perror("Ошибка stat(my_secret)");
+	perror("stat(my_secret) error");
    	return 1;
    	}
 
@@ -426,7 +426,7 @@ if (bytes_real < crypto_box_SECRETKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(my_secret/secret.keys)");
+if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
 //--считываем публичные ключи собеседника----------------------------------------------------------
 
@@ -436,7 +436,7 @@ strncat(path, "/ext_public", 11);
 
 //если папка ext_public не создана, то пытаемся создать её
 if (stat(path, &st) == -1) {
-   	perror("Ошибка stat(ext_public)");
+   	perror("stat(ext_public) error");
    	return 1;
    	}
 
@@ -464,9 +464,9 @@ if (bytes_real < crypto_box_PUBLICKEYBYTES) {
 	}
 
 //закрываем открытый файл
-if (fclose(fp) == EOF) perror("Ошибка fclose(ext_public/public.keys)");
+if (fclose(fp) == EOF) perror("fclose(ext_public/public.keys) error");
 
-printf("Постоянные ключи для общения с %s успешно загружены.\n", companion_name);
+printf("Persistent keys for talk with %s successfully loaded.\n", companion_name);
 
 //считаем и выводим хеш от постоянных публичных ключей для защиты от атаки "человек посередине"
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);
@@ -483,7 +483,7 @@ memcpy(out_h, h, crypto_hash_BYTES);
 return 0;
 }
 
-//--ОБМЕН ПОСТОЯННЫМИ ПУБЛИЧНЫМИ КЛЮЧАМИ ЭП И ШИФРОВАНИЯ ПО СЕТИ-----------------------------------
+//--PERSISTENT KEYS EXCHANGE VIA NETWORK-----------------------------------------------------------
 
 int net_key_exchange (int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
@@ -521,7 +521,7 @@ memcpy(fm+crypto_sign_PUBLICKEYBYTES, m_cp, crypto_box_PUBLICKEYBYTES);
 
 //посылаем два публичных ключа собеседнику
 if (sendall(sock, (char *)fm, (crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES)) == -1) {
-	perror("Ошибка sendall(m_sp+m_cp)");
+	perror("sendall(m_sp+m_cp) error");
 	return 1;
 	}
 
@@ -529,10 +529,10 @@ if (sendall(sock, (char *)fm, (crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBY
 bytes_real = recv(sock, x_sp, crypto_sign_PUBLICKEYBYTES, MSG_WAITALL);
 switch(bytes_real)
 	{case 0: {
-		printf("\nСоединение закрыто собеседником.\n");
+		printf("\nCompanion closed the connection.\n");
 		return 0;};
 	case -1: {
-		perror("Ошибка recv(x_sp)");
+		perror("recv(x_sp) error");
 		return 1;};
 	}
 
@@ -540,16 +540,16 @@ switch(bytes_real)
 bytes_real = recv(sock, x_cp, crypto_box_PUBLICKEYBYTES, MSG_WAITALL);
 switch(bytes_real)
 	{case 0: {
-		printf("\nСоединение закрыто собеседником.\n");
+		printf("\nCompanion closed the connection.\n");
 		return 0;
 		};
 	case -1: {
-		perror("Ошибка recv(x_cp)");
+		perror("recv(x_cp) error");
 		return 1;
 		};
 	}
 
-printf("Обмен постоянными ключами по сети прошёл успешно.\n");
+printf("Persistent keys exchange via network successfully done.\n");
 
 //считаем и выводим хеш от постоянных публичных ключей для защиты от атаки "человек посередине"
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);
@@ -566,7 +566,7 @@ memcpy(out_h, h, crypto_hash_BYTES);
 return 0;
 }
 
-//--ОБМЕН СЕАНСОВЫМИ ПУБЛИЧНЫМИ КЛЮЧАМИ ЭП И ШИФРОВАНИЯ ПО СЕТИ------------------------------------
+//--SESSION KEYS EXCHANGE VIA NETWORK--------------------------------------------------------------
 
 int create_session_keys (int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char Mx_sp[crypto_sign_PUBLICKEYBYTES],
@@ -629,7 +629,7 @@ memcpy(fm+crypto_box_NONCEBYTES, tm, tmlen);
 
 //посылаем это сообщение собеседнику
 if (sendall(sock, (char *)fm, (crypto_box_NONCEBYTES+tmlen)) == -1) {
-	perror("Ошибка sendall(m_n+m_sp+m_cp)");
+	perror("sendall(m_n+m_sp+m_cp) error");
 	return 1;
 	}
 	
@@ -641,10 +641,10 @@ memcpy(m_n, h, crypto_box_NONCEBYTES);
 bytes_real = recv(sock, x_n, crypto_box_NONCEBYTES, MSG_WAITALL);
 switch(bytes_real)
 	{case 0: {
-		printf("\nСоединение закрыто собеседником.\n");
+		printf("\nCompanion closed the connection.\n");
 		return 0;};
 	case -1: {
-		perror("Ошибка recv(x_n)");
+		perror("recv(x_n) error");
 		return 1;};
 	}
 
@@ -653,15 +653,15 @@ switch(bytes_real)
 bytes_real = recv(sock, tm, tmlen, MSG_WAITALL);
 switch(bytes_real)
 	{case 0: {
-		printf("\nСоединение закрыто собеседником.\n");
+		printf("\nCompanion closed the connection.\n");
 		if (close(sock) != 0) {
-			perror("Ошибка close(sock)");
+			perror("close(sock) error");
 			return 1;
 			}
 		return 0;};
 	case -1: {
-		perror("Ошибка recv(m)");
-		if (close(sock) != 0) perror("Ошибка close(sock)");
+		perror("recv(m) error");
+		if (close(sock) != 0) perror("close(sock) error");
 		return 1;};
 	}
 	
@@ -678,7 +678,7 @@ memcpy(cm+crypto_box_BOXZEROBYTES, tm, bytes_real);
 
 //пытаемся расшифровать сообщение
 if (crypto_box_open_afternm(tm, cm, cmlen, x_n, M_ckey) == -1) {
-	fprintf(stderr, "Ошибка: не удалось расшифровать сообщение с сеансовыми ключами.\n");
+	fprintf(stderr, "Error: failed to decrypt message with session keys.\n");
 	return 1;
 	}
 else {
@@ -688,7 +688,7 @@ else {
 
 	//проверяем электронную подпись сообщения
 	if (crypto_sign_open(tm, &mlen, sm, bytes_real-crypto_box_BOXZEROBYTES, Mx_sp) == -1) {
-		fprintf(stderr, "Ошибка: сообщение с сеансовыми ключами имеет неверную электронную подпись.\n");
+		fprintf(stderr, "Error: message with session keys has wrong signature.\n");
 		return 1;
 		}
 	else {
@@ -703,7 +703,7 @@ else {
 //собираем комбинацию секретного нашего и публичного ключа собеседника для ускорения работы
 crypto_box_beforenm(ckey, x_cp, m_cs);
 
-printf("Обмен сеансовыми ключами по сети прошёл успешно.\n");
+printf("Session keys exchange via network successfully done.\n");
 
 //считаем и выводим хеш от сеансовых публичных ключей для защиты от атаки "человек посередине"
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);

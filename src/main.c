@@ -1,6 +1,6 @@
 /*
-main.c - организация графического интерфейса пользователя Osteria
-Лицензия: BSD 2-Clause
+main.c - Osteria GUI organization
+License: BSD 2-Clause
 */
 
 #include "crypto.h"
@@ -86,7 +86,7 @@ int is_keys_exist (GtkWidget *parent_window)
 	//при отсуствии папки keys в каталоге с программой создаём её
 	if (mkdir("keys", 0700) == -1)
 		if (errno != EEXIST) {
-    		perror("Ошибка mkdir(keys)");
+    		perror("mkdir(keys) error");
     		return 1;
 		   	}
 
@@ -98,7 +98,7 @@ int is_keys_exist (GtkWidget *parent_window)
 
 		//папки для собеседника не было, при попытке её создания произошла ошибка - выходим из процедуры
 		if (errno != EEXIST) {
-			perror("Ошибка mkdir(user)");
+			perror("mkdir(user) error");
 			return 1;
 			}
 
@@ -233,14 +233,14 @@ if ((sock != 0) && (mlen > 0)) {
 	//пишем результирующее сообщение в сокет для общения
 	if (sendall(sock, (char *)fm, fmlen) == -1) {
 			
-			perror("Ошибка sendall(m)");
+			perror("sendall(m) error");
 			if (close(sock) != 0)
-				perror("Ошибка close(sock)");
+				perror("close(sock) error");
 			sock = 0;
 			
 			//выдаём сообщение в конец выходного буфера и прокручиваем текстовое представление до конца
 			begin_insert();
-			gtk_text_buffer_insert_at_cursor(out_buf, "\nНе удалось передать сообщение из-за критической ошкбки."
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nНе удалось передать сообщение из-за критической ошибки."
 											"Соединение будет закрыто.", -1);
 			end_insert();
 			
@@ -279,25 +279,25 @@ bytes_real = recv(sock, &tmlen_network, sizeof(uint16_t), MSG_WAITALL);
 switch(bytes_real) {
 	case 0: {
 	
-		if (close(sock) != 0) perror("Ошибка close(sock)");
+		if (close(sock) != 0) perror("close(sock) error");
 		sock = 0;
 		
 		//выдаём сообщение в конец выходного буфера и прокручиваем текстовое представление до конца
 		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nСоединение закрыто собеседником.", -1);
+		gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.", -1);
 		end_insert();
 		
 		return FALSE;
 		};
 	case -1: {
 
-		perror("Ошибка recv(tmlen)");
-		if (close(sock) != 0) perror("Ошибка close(sock)");
+		perror("recv(tmlen) error");
+		if (close(sock) != 0) perror("close(sock) error");
 		sock = 0;
 		
 		//выдаём сообщение в конец выходного буфера и прокручиваем текстовое представление до конца
 		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nПроизошла критическая ошкбка. Соединение будет закрыто.", -1);
+		gtk_text_buffer_insert_at_cursor(out_buf, "\nПроизошла критическая ошибка. Соединение будет закрыто.", -1);
 		end_insert();
 		
 		return FALSE;
@@ -315,25 +315,25 @@ bytes_real = recv(sock, tm, tmlen, MSG_WAITALL);
 switch(bytes_real)
 	{case 0: {
 		
-		if (close(sock) != 0) perror("Ошибка close(sock)");
+		if (close(sock) != 0) perror("close(sock) error");
 		sock = 0;
 		
 		//выдаём сообщение в конец выходного буфера и прокручиваем текстовое представление до конца
 		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nСоединение закрыто собеседником.", -1);
+		gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.", -1);
 		end_insert();
 		
 		return FALSE;
 		};
 	case -1: {
 		
-		perror("Ошибка recv(m)");
-		if (close(sock) != 0) perror("Ошибка close(sock)");
+		perror("recv(m) error");
+		if (close(sock) != 0) perror("close(sock) error");
 		sock = 0;
 		
 		//выдаём сообщение в конец выходного буфера и прокручиваем текстовое представление до конца
 		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nПроизошла критическая ошкбка. Соединение будет закрыто.", -1);
+		gtk_text_buffer_insert_at_cursor(out_buf, "\nПроизошла критическая ошибка. Соединение будет закрыто.", -1);
 		end_insert();
 		
 		return FALSE;
@@ -447,7 +447,7 @@ void close_handler ()
 	if (sock != 0) {
 	
 		if (close(sock) != 0)
-			perror("Ошибка close(sock)");
+			perror("close(sock) error");
 
 		sock = 0;
 
@@ -465,7 +465,7 @@ void quit_handler ()
 	//если сокет для общения ещё не закрыт, то закрываем его
 	if (sock != 0)
 		if (close(sock) != 0)
-			perror("Ошибка close(sock)");
+			perror("close(sock) error");
 
 	//выходим из главного цикла GTK
 	gtk_main_quit();
@@ -551,7 +551,7 @@ void show_talk ()
 
 	//устанавливаем его кодировку в NULL, поскольку мы работаем с двоичными данными
 	if (g_io_channel_set_encoding(sock_GIO, NULL, NULL) != G_IO_STATUS_NORMAL)
-		fprintf(stderr, "Ошибка g_io_channel_set_encoding().\n");
+		fprintf(stderr, "g_io_channel_set_encoding() error.\n");
 
 	//активируем обработчик в тех случаях, когда из сокета есть что прочитать или соединение разорвано
 	g_io_add_watch(sock_GIO, G_IO_IN || G_IO_HUP, sock_GIO_handler, NULL);
@@ -834,11 +834,11 @@ int main(int argc, char *argv[])
 	GtkBuilder *builder;	//указатель на служебную структуру (после работы очистить)
 	GtkWidget *settings_win = NULL, *button;	//указатели на создаваемое окно и кнопку
 
-	printf("Отладочная информация о работе Osteria %s\n\n", version);
+	printf("Osteria %s, debug output\n\n", version);
 
 	/*пытаемся сделать программу восприимчивой ко всем локалям; ошибка здесь не будет критичной,
 	поэтому не завершаем работу при её появлении*/
-	if (setlocale(LC_ALL, "") == NULL) fprintf(stderr, "Ошибка setlocale()\n");
+	if (setlocale(LC_ALL, "") == NULL) fprintf(stderr, "setlocale() error\n");
 
 	//инициализация GTK+
 	gtk_init(&argc, &argv);

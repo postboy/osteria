@@ -1,6 +1,5 @@
 /* 
-poison.h - simple header file for developers to ban unsafe C/C++ functions from applications, with additions
-
+poison.h - header to ban unsafe C/C++ functions from applications, modified
 License: public domain
 
 Original: https://github.com/leafsr/gcc-poison, version 04.12.2013

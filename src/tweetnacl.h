@@ -1,13 +1,13 @@
 /* 
-tweetnacl.h - заголовочный файл криптографической библиотеки TweetNaCl версии 20140427 с дополнениями и изменениями
-Лицензия: общественное достояние
+tweetnacl.h - header for cryptographic library TweetNaCl version 20140427, modified
+License: public domain
 */
 
-//макрозащита, запрещающая подключать этот файл более одного раза
+//macro guard used to avoid the problem of double inclusion
 #ifndef TWEETNACL_H
 #define TWEETNACL_H
 
-//библиотеки функций для всех модулей Osteria:
+//headers for all Osteria source files:
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -25,23 +25,23 @@ tweetnacl.h - заголовочный файл криптографическо
 #include <sys/stat.h>
 #include <gtk/gtk.h>
 
-//#include <winsock.h> - потребуется для перекомпиляции под Windows
+//#include <winsock.h> - will need it for porting to Windows
 
-#include "poison.h"		//подключаем заголовочный файл, запрещающий использовать уязвимые функции
+#include "poison.h"		//we need to include it to ban unsafe C functions
 
-//используемые константы для всех модулей Osteria:
-#define maxmlen 4000	//максимальный размер текста сообщений пользователей
+//constants for all Osteria's source files:
+#define maxmlen 4000	//maximal length of user's text message
 #define varmlen maxmlen+crypto_sign_BYTES+crypto_box_ZEROBYTES
-//размер переменных для сохранения сообщений в процессе их обработки
-#define STDIN_FD 0		//дескриптор потока стандартного ввода, то есть клавиатуры
-#define version "0.08"	//версия программы
+//size of variables that contain messages during program's work
+#define version "0.08"	//program version
 
 void randombytes(unsigned char *x, unsigned long long xlen);
-//функция, использующаяся в макросе для генерации нонса
+//function that used in macros for nonce generation below
 
-#define crypto_box_getnonce(n) randombytes(n, crypto_box_NONCEBYTES)	//макрос для генерации нонса
+#define crypto_box_getnonce(n) randombytes(n, crypto_box_NONCEBYTES)
+//macros for nonce generation
 
-//функции библиотеки TweetNaCl:
+//definitions of TweetNaCl functions used in Osteria:
 
 #define crypto_box_PRIMITIVE "curve25519xsalsa20poly1305"
 #define crypto_box crypto_box_curve25519xsalsa20poly1305
@@ -124,7 +124,7 @@ extern int crypto_sign_ed25519_tweet_keypair(unsigned char *,unsigned char *);
 #define crypto_sign_ed25519_VERSION crypto_sign_ed25519_tweet_VERSION
 #define crypto_sign_ed25519_IMPLEMENTATION "crypto_sign/ed25519/tweet"
 
-//объявления функций TweetNaCl, не использующиеся в Osteria:
+//definitions of TweetNaCl functions NOT used in Osteria:
 
 /*
 #define crypto_auth_PRIMITIVE "hmacsha512256"

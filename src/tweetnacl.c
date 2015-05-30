@@ -1,15 +1,15 @@
 /* 
-tweetnacl.c - криптографическая библиотека TweetNaCl версии 20140427 с дополнениями и изменениями
-Лицензия: общественное достояние
+tweetnacl.c - cryptographic library TweetNaCl version 20140427, modified
+License: public domain
 */
 
 #include "tweetnacl.h"
 
-//--ГЕНЕРАЦИЯ СЛУЧАЙНЫХ ДАННЫХ ДЛЯ ВНУТРЕННИХ НУЖД БИБЛИОТЕКИ И ДЛЯ ГЕНЕРАЦИИ НОНСА----------------
+//--RANDOM DATA GENERATION FOR TWEETNACL ITSELF AND FOR NONCE GENERATION---------------------------
 
 /*
-Источник: исходные коды библиотеки NaCl, файл /randombytes/devurandom.c версии 20080713 автора
-D.J.Bernstein. http://hyperelliptic.org/nacl/nacl-20110221.tar.bz2
+Original: http://hyperelliptic.org/nacl/nacl-20110221.tar.bz2, file /randombytes/devurandom.c from
+NaCl library version 20080713
 */
 
 static int fd = -1;
@@ -40,7 +40,7 @@ void randombytes (unsigned char *x,unsigned long long xlen)
   }
 }
 
-//--БИБЛИОТЕКА TWEETNACL---------------------------------------------------------------------------
+//--TWEETNACL LIBRARY------------------------------------------------------------------------------
 
 #define FOR(i,n) for (i = 0;i < n;++i)
 #define sv static void

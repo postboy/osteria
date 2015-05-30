@@ -1,24 +1,24 @@
 /*
-crypto.h - заголовочный файл для crypto.c
-Лицензия: BSD 2-Clause
+crypto.h - header for crypto.c
+License: BSD 2-Clause
 */
 
-//макрозащита, запрещающая подключать этот файл более одного раза
+//macro guard used to avoid the problem of double inclusion
 #ifndef __CRYPTO_H__
 #define __CRYPTO_H__
 
 #include "stuff.h"
 
-//генерация файлов с постоянными ключами
+//generation of files with persistent keys
 int generate_key_files(const char *companion_name);
-//сохранить в файлы постоянные ключи текущего сеанса
+//saving current session's persistent keys to files
 int save_current_keys(const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char m_cs[crypto_box_SECRETKEYBYTES],
 						unsigned char x_cp[crypto_box_PUBLICKEYBYTES]);
-//загрузить постоянные ключи из файлов на диске
+//load persistent keys from files
 int load_key_files(const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
@@ -26,7 +26,7 @@ int load_key_files(const char *companion_name, unsigned char *out_m_sp[crypto_si
 						unsigned char *out_m_cs[crypto_box_SECRETKEYBYTES],
 						unsigned char *out_x_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char *out_h[crypto_hash_BYTES]);
-//обмен постоянными публичными ключами ЭП и шифрования по сети
+//persistent keys exchange via network
 int net_key_exchange(int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
@@ -34,7 +34,7 @@ int net_key_exchange(int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTE
 						unsigned char *out_m_cs[crypto_box_SECRETKEYBYTES],
 						unsigned char *out_x_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char *out_h[crypto_hash_BYTES]);
-//обмен сеансовыми публичными ключами ЭП и шифрования по сети
+//session keys exchange via network
 int create_session_keys(int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char Mx_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char M_ckey[crypto_box_BEFORENMBYTES],
