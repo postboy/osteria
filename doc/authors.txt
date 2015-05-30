@@ -1,8 +1,8 @@
-Разработка
-----------
-Зубов Иван // anotherdiskmag на Gooooooogle Mail
+Developer
+---------
+Zubov Ivan // anotherdiskmag on Gooooooogle Mail
 
-Тестирование, критика
----------------------
-Елманов Андрей
-Даниленко Егор
+Testing, ideas
+--------------
+Yelmanov Andrew
+Danilenko Egor

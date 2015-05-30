@@ -1,16 +1,19 @@
 /* 
-poison.h - заголовочный файл, запрещающий использовать уязвимые функции, с дополнениями и изменениями
-Лицензия: общественное достояние
+poison.h - simple header file for developers to ban unsafe C/C++ functions from applications, with additions
 
-Оригинал: https://github.com/leafsr/gcc-poison, версия 04.12.2013
+License: public domain
+
+Original: https://github.com/leafsr/gcc-poison, version 04.12.2013
+Post about it: http://blog.leafsr.com/2013/12/02/gcc-poison
+Copyright 2013 - Leaf Security Research
 */
 
-//макрозащита, запрещающая подключать этот файл более одного раза
+//macro guard used to avoid the problem of double inclusion
 #ifndef __POISON_H__
 #define __POISON_H__
 #ifdef __GNUC__
 
-/* Работа со строками */
+/* string handling functions */
 #	pragma GCC poison strcpy wcscpy stpcpy wcpcpy
 #	pragma GCC poison scanf sscanf vscanf fwscanf swscanf wscanf
 #	pragma GCC poison gets puts
@@ -22,30 +25,30 @@ poison.h - заголовочный файл, запрещающий испол�
 #	pragma GCC poison strtok wcstok
 #	pragma GCC poison strdupa strndupa
 
-/* Относящиеся к сигналам */
+/* signal related */
 #	pragma GCC poison longjmp siglongjmp
 #	pragma GCC poison setjmp sigsetjmp
 
-/* Выделение памяти */
-/*закомментированно, так как иначе выдаётся предупреждение "warning: poisoning existing macro
-"alloca" [enabled by default]"*/
+/* memory allocation */
+/*next line is commented because it produces "warning: poisoning existing macro "alloca" [enabled
+by default]" after including some system header*/
 //#	pragma GCC poison alloca
 #	pragma GCC poison mallopt
 
-/* Файловое API */
+/* file API */
 #	pragma GCC poison remove
 #	pragma GCC poison mktemp tmpnam tempnam
 #	pragma GCC poison getwd
 
-/* Разное */
+/* misc */
 #	pragma GCC poison getlogin getpass cuserid
 #	pragma GCC poison rexec rexec_af
 
-/* Выполнение команд/запуск программ */
-//использование этого семейства функций часто небезопасно и неоправдано
+/* command and program execution */
+//use of that functions is often insecure and unjustified
 #	pragma GCC poison system exec execl execlp execle execv execvp execvpe execve fexecve
 
-/* Устаревшие сетевые функции */
+/* deprecated network functions */
 #	pragma GCC poison gethostbyname gethostbyaddr inet_ntoa inet_aton
 
 #endif
