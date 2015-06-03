@@ -16,7 +16,7 @@
   </object>
   <object class="GtkApplicationWindow" id="talk_window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Беседа</property>
+    <property name="title" translatable="yes">Talk</property>
     <property name="window_position">center</property>
     <property name="default_width">425</property>
     <property name="default_height">425</property>
@@ -39,7 +39,7 @@
               <object class="GtkMenuItem" id="file_menuitem">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">_Файл</property>
+                <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="file_menu">
@@ -47,7 +47,7 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="save-keys_menuitem">
-                        <property name="label">Сохранить ключи</property>
+                        <property name="label">Save keys</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="image">save-keys_img</property>
@@ -56,7 +56,7 @@
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="close-connection_menuitem">
-                        <property name="label">Закрыть соединение</property>
+                        <property name="label">Close connection</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="image">close-connection_img</property>
@@ -86,7 +86,7 @@
               <object class="GtkMenuItem" id="help_menuitem">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">_Справка</property>
+                <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="help_menu">
@@ -168,7 +168,7 @@
         </child>
         <child>
           <object class="GtkButton" id="send_button">
-            <property name="label" translatable="yes">Отправить</property>
+            <property name="label" translatable="yes">Send</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>

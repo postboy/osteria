@@ -15,37 +15,37 @@ void get_pubkeys_hash (unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 
 {
 
-//сообщение для хеширования, хеш
+//message for hashing, hash
 unsigned char fm[2*crypto_sign_PUBLICKEYBYTES+2*crypto_box_PUBLICKEYBYTES], h[crypto_hash_BYTES];
 
-//сначала записываем в сообщение для хеширования ключи ЭП стороны с бОльшим публичным ключом
+//bigger signature public key goes in a message for hashing first
 if (memcmp(m_sp, x_sp, crypto_sign_PUBLICKEYBYTES) > 0) {
-	//если это мы, то сперва записываем наши ключи, потом собеседника
+	//if it's our key then first write it and secondly companion's one
 	memcpy(fm, m_sp, crypto_sign_PUBLICKEYBYTES);
 	memcpy(fm+crypto_sign_PUBLICKEYBYTES, x_sp, crypto_sign_PUBLICKEYBYTES);
 	}
 else {
-	//иначе это собеседник, то сперва записываем его ключи, потом наши
+	//otherwise it's companion's key then first write it than our one
 	memcpy(fm, x_sp, crypto_sign_PUBLICKEYBYTES);
 	memcpy(fm+crypto_sign_PUBLICKEYBYTES, m_sp, crypto_sign_PUBLICKEYBYTES);
 	}
 	
-//сначала записываем в сообщение для хеширования ключи шифрования стороны с бОльшим публичным ключом
+//after signature keys, bigger encryption public key goes in a message for hashing first
 if (memcmp(m_cp, x_cp, crypto_box_PUBLICKEYBYTES) > 0) {
-	//если это мы, то сперва записываем наши ключи, потом собеседника
+	//if it's our key then first write it and secondly companion's one
 	memcpy(fm+2*crypto_sign_PUBLICKEYBYTES, m_cp, crypto_box_PUBLICKEYBYTES);
 	memcpy(fm+2*crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES, x_cp, crypto_box_PUBLICKEYBYTES);
 	}
 else {
-	//иначе это собеседник, то сперва записываем его ключи, потом наши
+	//otherwise it's companion's key then first write it than our one
 	memcpy(fm+2*crypto_sign_PUBLICKEYBYTES, x_cp, crypto_box_PUBLICKEYBYTES);
 	memcpy(fm+2*crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES, m_cp, crypto_box_PUBLICKEYBYTES);
 	}
 
-//считаем хеш от получившегося сообщения
+//get hash of resulted message
 crypto_hash(h, fm, (2*crypto_sign_PUBLICKEYBYTES+2*crypto_box_PUBLICKEYBYTES));
 
-//возвращаем его в место вызова
+//send hash back to caller
 memcpy(out_h, h, crypto_hash_BYTES);
     
 }
@@ -55,110 +55,107 @@ memcpy(out_h, h, crypto_hash_BYTES);
 int generate_key_files (const char *companion_name)
 {
 
-FILE *fp;	//файловая переменная
+FILE *fp;			//file variable
 char path[200], path_master[200] = "keys/";
-/*текущий путь к файлу/папке, постоянный путь к файлу/папке, имя собеседника, строка для считывания
-выбора пользователя "да/нет"*/
-size_t bytes_real;	//число реально записанных байт
+//current path to file or folder, master path to folder
+size_t really_recvieved;	//number of really written bytes
 
-//ЭП, мы: публичный и секретный ключи
+//signatures, we: public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES];
 
-//шифрование, мы: публичный и секретный ключи
+//encryption, we: public and secret keys
 unsigned char m_cp[crypto_box_PUBLICKEYBYTES], m_cs[crypto_box_SECRETKEYBYTES];
 
-//генерируем постоянные ключи ЭП и шифрования
+//generate signature and encryption persistent keys
 crypto_sign_keypair(m_sp,m_ss);
 crypto_box_keypair(m_cp, m_cs);
 
-//--записываем наши публичные ключи-----------------------------------------------------------------
+//--write our public keys--------------------------------------------------------------------------
 
-//получаем путь вида "keys/user"
+//get a path like "keys/companion"
 strncat(path_master, companion_name, 30);
 
-//получаем путь вида "keys/user/my_public"
+//get a path like "keys/companion/my_public"
 memcpy(path, path_master, 200);
 strncat(path, "/my_public", 10);
 
-//если папка my_public не создана, то пытаемся создать её
+//if "my_public" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(my_public) error");
     	return 1;
 	   	}
 
-//получаем путь вида "keys/user/my_public/public.keys"
+//get a path like "keys/companion/my_public/public.keys"
 strncat(path, "/public.keys", 12);
 
-//пытаемся открыть бинарный файл public.keys для записи
+//try to open "public.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
 	fprintf(stderr, "Error: cannot open file my_public/public.keys for writing.\n");
     return 1;
 	}
 
-//записываем наши публичные ключи ЭП и шифрования в файл
-bytes_real = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Error: cannot write m_sp in my_public/public.keys.\n");
+//write our signature and encryption public keys in file
+really_recvieved = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: cannot write m_sp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Error: cannot write m_cp in my_public/public.keys.\n");
+really_recvieved = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: cannot write m_cp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
-//--записываем наши секретные ключи----------------------------------------------------------------
+//--write our secret keys--------------------------------------------------------------------------
 
-//получаем путь вида "keys/user/my_secret"
+//get a path like "keys/companion/my_secret"
 memcpy(path, path_master, 200);
 strncat(path, "/my_secret", 10);
 
-//если папка my_secret не создана, то пытаемся создать её
+//if "my_secret" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(my_secret) error");
     	return 1;
 	   	}
 
-//получаем путь вида "keys/user/my_secret/secret.keys"
+//get a path like "keys/companion/my_secret/secret.keys"
 strncat(path, "/secret.keys", 12);
 
-//пытаемся открыть бинарный файл secret.keys для записи
+//try to open "secret.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
 	fprintf(stderr, "Error: cannot open file my_secret/secret.keys for writing.\n");
     return 1;
 	}
 
-//записываем наши секретные ключи ЭП и шифрования в файл
-bytes_real = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_sign_SECRETKEYBYTES) {
-	fprintf(stderr, "Error: cannot write m_ss in my_secret/secret.keys.\n");
+//write our signature and encryption secret keys in file
+really_recvieved = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: cannot write m_ss in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_box_SECRETKEYBYTES) {
-	fprintf(stderr, "Error: cannot write m_cs in my_secret/secret.keys.\n");
+really_recvieved = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: cannot write m_cs in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
-//--создаём папку для публичных ключей собеседника--------------------------------------------------
+//--create a folder for companion's public keys----------------------------------------------------
 
-//получаем путь вида "keys/user/ext_public"
+//get a path like "keys/companion/ext_public"
 memcpy(path, path_master, 200);
 strncat(path, "/ext_public", 11);
 
-//если папка ext_public не создана, то пытаемся создать её
+//if "ext_public" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(ext_public) error");
@@ -178,132 +175,129 @@ int save_current_keys (const char *companion_name, unsigned char m_sp[crypto_sig
 						unsigned char x_cp[crypto_box_PUBLICKEYBYTES])
 {
 
-FILE *fp;	//файловая переменная
+FILE *fp;			//file variable
 char path[200], path_master[200] = "keys/";
-//текущий путь к файлу/папке, постоянный путь к файлу/папке
-size_t bytes_real;	//число реально записанных байт
+//current path to file or folder, master path to folder
+size_t really_recvieved;	//number of really written bytes
 
-//--записываем наши публичные ключи----------------------------------------------------------------
+//--write our public keys--------------------------------------------------------------------------
 
-//получаем путь вида "keys/user"
+//get a path like "keys/companion"
 strncat(path_master, companion_name, 30);
 
-//получаем путь вида "keys/user/my_public"
+//get a path like "keys/companion/my_public"
 memcpy(path, path_master, 200);
 strncat(path, "/my_public", 11);
 
-//если папка ext_public не создана, то пытаемся создать её
+//if "ext_public" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(my_public) error");
     	return 1;
 	   	}
 
-//получаем путь вида "keys/user/my_public/public.keys"
+//get a path like "keys/companion/my_public/public.keys"
 strncat(path, "/public.keys", 12);
 
-//пытаемся открыть бинарный файл public.keys для записи
+//try to open "public.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_public/public.keys для записи.\n");
+	fprintf(stderr, "Error: can't open my_public/public.keys file file for writing.\n");
     return 1;
 	}
 
-//записываем наши публичные ключи ЭП и шифрования в файл
-bytes_real = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_sp в my_public/public.keys.\n");
+//write our signature and encryption public keys in file
+really_recvieved = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: can't write m_sp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_cp в my_public/public.keys.\n");
+really_recvieved = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: can't write m_cp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
-//--записываем наши секретные ключи----------------------------------------------------------------
+//--write our secret keys--------------------------------------------------------------------------
 
-//получаем путь вида "keys/user/my_secret"
+//get a path like "keys/companion/my_secret"
 memcpy(path, path_master, 200);
 strncat(path, "/my_secret", 10);
 
-//если папка my_secret не создана, то пытаемся создать её
+//if "my_secret" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(my_secret) error");
     	return 1;
 	   	}
 
-//получаем путь вида "keys/user/my_secret/secret.keys"
+//get a path like "keys/companion/my_secret/secret.keys"
 strncat(path, "/secret.keys", 12);
 
-//пытаемся открыть бинарный файл secret.keys для записи
+//try to open "secret.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_secret/secret.keys для записи.\n");
+	fprintf(stderr, "Error: can't open my_secret/secret.keys file file for writing.\n");
     return 1;
 	}
 
-//записываем наши секретные ключи ЭП и шифрования в файл
-bytes_real = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_sign_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_ss в my_secret/secret.keys.\n");
+//write our signature and encryption secret keys in file
+really_recvieved = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: can't write m_ss in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_box_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать m_cs в my_secret/secret.keys.\n");
+really_recvieved = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: can't write m_cs in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
-//--записываем публичные ключи собеседника---------------------------------------------------------
+//--write companion's public keys------------------------------------------------------------------
 
-//получаем путь вида "keys/user/ext_public"
+//get a path like "keys/companion/ext_public"
 memcpy(path, path_master, 200);
 strncat(path, "/ext_public", 11);
 
-//если папка ext_public не создана, то пытаемся создать её
+//if "ext_public" folder doesn't exists then create it
 if (mkdir(path, 0700) == -1)
 	if (errno != EEXIST) {
     	perror("mkdir(ext_public) error");
     	return 1;
 	   	}
 
-//получаем путь вида "keys/user/ext_public/public.keys"
+//get a path like "keys/companion/ext_public/public.keys"
 strncat(path, "/public.keys", 12);
 
-//пытаемся открыть бинарный файл public.keys для записи
+//try to open "public.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл ext_public/public.keys для записи.\n");
+	fprintf(stderr, "Error: can't open ext_public/public.keys file for writing.\n");
     return 1;
 	}
 
-//записываем наши публичные ключи ЭП и шифрования в файл
-bytes_real = fwrite(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать x_sp в ext_public/public.keys.\n");
+//write companion's signature and encryption public keys in file
+really_recvieved = fwrite(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: can't write x_sp in ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fwrite(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно записать x_cp в ext_public/public.keys.\n");
+really_recvieved = fwrite(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: can't write x_cp in ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(ext_public/public.keys) error");
 
-printf("Постоянные ключи для общения с %s успешно сохранены.\n\n", companion_name);
+printf("Persistent keys for talk with %s successfully saved.\n\n", companion_name);
 
 return 0;
 }
@@ -318,160 +312,157 @@ int load_key_files (const char *companion_name, unsigned char *out_m_sp[crypto_s
 						unsigned char *out_x_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char *out_h[crypto_hash_BYTES])
 {
-FILE *fp;	//файловая переменная
+FILE *fp;				//file variable
 char path[200], path_master[200] = "keys/";
-//текущий путь к файлу/папке, постоянный путь к файлу/папке
-size_t bytes_real;					//число реально записанных байт
-struct stat st = {0};				//структура для функции stat
+//current path to file or folder, master path to folder
+size_t really_recvieved;		//number of really readed bytes
+struct stat st = {0};	//structure for stat() function
 
 
-//ЭП, мы: публичный и секретный ключи
+//signatures, we: public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES],
-//ЭП, собеседник: публичный ключ
+//signatures, companion: public key
 x_sp[crypto_sign_PUBLICKEYBYTES];
 
-//шифрование, мы: публичный и секретный ключи
+//encryption, we: public and secret keys
 unsigned char m_cp[crypto_box_PUBLICKEYBYTES], m_cs[crypto_box_SECRETKEYBYTES],
-//шифрование, собеседник: публичный ключ
+//encryption, companion: public key
 x_cp[crypto_box_PUBLICKEYBYTES],
 
-h[crypto_hash_BYTES];	//хеш от публичных ключей
+h[crypto_hash_BYTES];	//hash of public keys
 
-//при отсуствии папки keys выдаём ошибку
+//check for existence of "keys" folder
 if (stat("keys", &st) == -1) {
    	perror("stat(keys) error");
    	return 1;
    	}
 
-//получаем путь вида "keys/user"
+//get a path like "keys/companion"
 strncat(path_master, companion_name, 30);
 
-//при отсуствии папки для собеседника с таким именем выдаём ошибку
+//check for existence of a folder with companion's name
 if (stat(path_master, &st) == -1) {
-	perror("stat(user) error");
+	perror("stat(companion) error");
 	return 1;
 	}
 
-//--считываем наши публичные ключи-----------------------------------------------------------------
+//--read our public keys---------------------------------------------------------------------------
 
-//получаем путь вида "keys/user/my_public"
+//get a path like "keys/companion/my_public"
 memcpy(path, path_master, 200);
 strncat(path, "/my_public", 11);
 
-//если папка ext_public не создана, то пытаемся создать её
+//check for existence of "ext_public" folder
 if (stat(path, &st) == -1) {
    	perror("stat(my_public) error");
    	return 1;
    	}
 
-//получаем путь вида "keys/user/my_public/public.keys"
+//get a path like "keys/companion/my_public/public.keys"
 strncat(path, "/public.keys", 12);
 
-//пытаемся открыть бинарный файл public.keys для чтения
+//try to open "public.keys" binary file for reading
 if ((fp = fopen(path, "rb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_public/public.keys для чтения.\n");
+	fprintf(stderr, "Error: can't open my_public/public.keys file for reading.\n");
     return 1;
 	}
 
-//записываем наши публичные ключи ЭП и шифрования в файл
-bytes_real = fread(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать m_sp из my_public/public.keys.\n");
+//load our signature and encryption public keys from file
+really_recvieved = fread(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: failed to read m_sp from my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fread(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать m_cp из my_public/public.keys.\n");
+really_recvieved = fread(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: failed to read m_cp from my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_public/public.keys) error");
 
-//--считываем наши секретные ключи-----------------------------------------------------------------
+//--read our secret keys---------------------------------------------------------------------------
 
-//получаем путь вида "keys/user/my_secret"
+//get a path like "keys/companion/my_secret"
 memcpy(path, path_master, 200);
 strncat(path, "/my_secret", 10);
 
-//при отсуствии папки my_secret выдаём ошибку
+//check for existence of "my_secret" folder
 if (stat(path, &st) == -1) {
 	perror("stat(my_secret) error");
    	return 1;
    	}
 
-//получаем путь вида "keys/user/my_secret/secret.keys"
+//get a path like "keys/companion/my_secret/secret.keys"
 strncat(path, "/secret.keys", 12);
 
-//пытаемся открыть бинарный файл secret.keys для чтения
+//try to open "secret.keys" binary file for reading
 if ((fp = fopen(path, "rb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл my_secret/secret.keys для чтения.\n");
+	fprintf(stderr, "Error: can't open my_secret/secret.keys file for reading.\n");
     return 1;
 	}
 
-//записываем наши секретные ключи ЭП и шифрования в файл
-bytes_real = fread(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_sign_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать m_ss из my_secret/secret.keys.\n");
+//load our signature and encryption secret keys from file
+really_recvieved = fread(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: failed to read m_ss from my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fread(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (bytes_real < crypto_box_SECRETKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать m_cs из my_secret/secret.keys.\n");
+really_recvieved = fread(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+	fprintf(stderr, "Error: failed to read m_cs from my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(my_secret/secret.keys) error");
 
-//--считываем публичные ключи собеседника----------------------------------------------------------
+//--read companion's public keys-------------------------------------------------------------------
 
-//получаем путь вида "keys/user/ext_public"
+//get a path like "keys/companion/ext_public"
 memcpy(path, path_master, 200);
 strncat(path, "/ext_public", 11);
 
-//если папка ext_public не создана, то пытаемся создать её
+//check for existence of "ext_public" folder
 if (stat(path, &st) == -1) {
    	perror("stat(ext_public) error");
    	return 1;
    	}
 
-//получаем путь вида "keys/user/ext_public/public.keys"
+//get a path like "keys/companion/ext_public/public.keys"
 strncat(path, "/public.keys", 12);
 
-//пытаемся открыть бинарный файл public.keys для чтения
+//try to open "public.keys" binary file for reading
 if ((fp = fopen(path, "rb")) == NULL) {
-	fprintf(stderr, "Ошибка: невозможно открыть файл ext_public/public.keys для чтения.\n");
+	fprintf(stderr, "Error: can't open ext_public/public.keys file for reading.\n");
     return 1;
 	}
 
-//записываем наши публичные ключи ЭП и шифрования в файл
-bytes_real = fread(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_sign_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать x_sp из ext_public/public.keys.\n");
+//load companion's signature and encryption public keys from file
+really_recvieved = fread(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: failed to read x_sp from ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-bytes_real = fread(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (bytes_real < crypto_box_PUBLICKEYBYTES) {
-	fprintf(stderr, "Ошибка: невозможно считать x_cp из ext_public/public.keys.\n");
+really_recvieved = fread(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+	fprintf(stderr, "Error: failed to read x_cp from ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
 
-//закрываем открытый файл
 if (fclose(fp) == EOF) perror("fclose(ext_public/public.keys) error");
 
 printf("Persistent keys for talk with %s successfully loaded.\n", companion_name);
 
-//считаем и выводим хеш от постоянных публичных ключей для защиты от атаки "человек посередине"
+//get hash of persistent public keys for protection against "man-in-the-middle" attack
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);
 
-//всё выполнилось правильно, передаём результаты в место вызова
+//send results back to caller
 memcpy(out_m_sp, m_sp, crypto_sign_PUBLICKEYBYTES);
 memcpy(out_m_ss, m_ss, crypto_sign_SECRETKEYBYTES);
 memcpy(out_x_sp, x_sp, crypto_sign_PUBLICKEYBYTES);
@@ -495,39 +486,38 @@ int net_key_exchange (int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYT
 {
 
 unsigned char fm[2*crypto_sign_PUBLICKEYBYTES+2*crypto_sign_PUBLICKEYBYTES];
-//сообщение с публичными ключами для хеширования
-unsigned long long bytes_real;
-//число фактически переданных/полученных байт
+//message with public keys
+unsigned long long really_recvieved;	//number of really recieved bytes
 
-//ЭП, мы: публичный и секретный ключи
+//signatures, we: public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES],
-//ЭП, собеседник: публичный ключ
+//signatures, companion: public key
 x_sp[crypto_sign_PUBLICKEYBYTES];
 
-//шифрование, мы: публичный и секретный ключи
+//encryption, we: public and secret keys
 unsigned char m_cp[crypto_box_PUBLICKEYBYTES], m_cs[crypto_box_SECRETKEYBYTES],
-//шифрование, собеседник: публичный ключ
+//encryption, companion: public key
 x_cp[crypto_box_PUBLICKEYBYTES],
 
-h[crypto_hash_BYTES];	//хеш от публичных ключей
+h[crypto_hash_BYTES];	//hash of public keys
 
-//генерируем постоянные ключи ЭП и шифрования
+//generate signature and encryption persistent keys
 crypto_sign_keypair(m_sp, m_ss);
 crypto_box_keypair(m_cp, m_cs);
 
-//записываем публичные ключи ЭП и шифрования в сообщение с публичными ключами
+//write signature and encryption public keys signatures in a message with public keys
 memcpy(fm, m_sp, crypto_sign_PUBLICKEYBYTES);
 memcpy(fm+crypto_sign_PUBLICKEYBYTES, m_cp, crypto_box_PUBLICKEYBYTES);
 
-//посылаем два публичных ключа собеседнику
+//send 2 public keys to companion
 if (sendall(sock, (char *)fm, (crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES)) == -1) {
 	perror("sendall(m_sp+m_cp) error");
 	return 1;
 	}
 
-//принимаем публичный ключ ЭП собеседника
-bytes_real = recv(sock, x_sp, crypto_sign_PUBLICKEYBYTES, MSG_WAITALL);
-switch(bytes_real)
+//recieve companion's signature public key
+really_recvieved = recv(sock, x_sp, crypto_sign_PUBLICKEYBYTES, MSG_WAITALL);
+switch(really_recvieved)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;};
@@ -536,9 +526,9 @@ switch(bytes_real)
 		return 1;};
 	}
 
-//принимаем публичный ключ шифрования собеседника
-bytes_real = recv(sock, x_cp, crypto_box_PUBLICKEYBYTES, MSG_WAITALL);
-switch(bytes_real)
+//recieve companion's encryption public key
+really_recvieved = recv(sock, x_cp, crypto_box_PUBLICKEYBYTES, MSG_WAITALL);
+switch(really_recvieved)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;
@@ -549,12 +539,12 @@ switch(bytes_real)
 		};
 	}
 
-printf("Persistent keys exchange via network successfully done.\n");
+printf("Persistent keys exchange via network done.\n");
 
-//считаем и выводим хеш от постоянных публичных ключей для защиты от атаки "человек посередине"
+//get hash of persistent public keys for protection against "man-in-the-middle" attack
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);
 
-//всё выполнилось правильно, передаём результаты в место вызова
+//send results back to caller
 memcpy(out_m_sp, m_sp, crypto_sign_PUBLICKEYBYTES);
 memcpy(out_m_ss, m_ss, crypto_sign_SECRETKEYBYTES);
 memcpy(out_x_sp, x_sp, crypto_sign_PUBLICKEYBYTES);
@@ -579,67 +569,66 @@ int create_session_keys (int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTE
 						unsigned char *out_h[crypto_hash_BYTES])
 {
 
-unsigned char m[varmlen], fm[sizeof(uint16_t)+crypto_box_NONCEBYTES+varmlen];
-//пользовательское и финальное (передаваемое по сети) сообщения
-unsigned long long mlen, bytes_real;
-//размер пользовательского и финального сообщений, число фактически переданных/полученных байт
+unsigned char m[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES], fm[varmlen];
+//message with public keys (original, after signing and encryption with persistent keys)
+unsigned long long mlen, really_recvieved;
+//size of original and final messages, number of really recieved bytes
 
-//ЭП, мы: сеансовые публичный и секретный ключи
+//signatures, we: session public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES],
-//ЭП, собеседник: сеансовый публичный ключ
+//signatures, companion: session public key
 x_sp[crypto_sign_PUBLICKEYBYTES],
-//ЭП, обе стороны: сообщение с ЭП, его длина
+//signatures, both sides: signed message, it's length
 sm[varmlen];
 unsigned long long smlen;
 
-//шифрование, мы: сеансовые публичный и секретный ключи, нонс
+//encryption, we: session public and secret keys, nonce
 unsigned char m_cp[crypto_box_PUBLICKEYBYTES], m_cs[crypto_box_SECRETKEYBYTES],
 m_n[crypto_box_NONCEBYTES],
-//шифрование, собеседник: сеансовый публичный ключ, нонс, временный нонс
+//encryption, companion: session public key, nonce, temorary nonce
 x_cp[crypto_box_PUBLICKEYBYTES], x_n[crypto_box_NONCEBYTES], x_n_tmp[crypto_box_NONCEBYTES],
-/*шифрование, обе стороны: зашифрованное и временное сообщения, комбинация (сеансовых) секретного
-нашего и публичного ключа собеседника, хеш для генерации нонса, длины зашифрованного и временного
-сообщений (в обычном формате и в формате для передачи по сети), хеш от публичных ключей*/
+/*encryption, both sides: encrypted and temporary messages, combination of our secret and
+companion's public keys, hash for nonce generation, lengths of encrypted and temporary messages*/
 cm[varmlen], tm[varmlen], ckey[crypto_box_BEFORENMBYTES], h[crypto_hash_BYTES];
 unsigned long long cmlen, tmlen;
 
-//генерируем наш начальный нонс, сеансовые ключи ЭП и шифрования
+//generate our first nonce, signature and encryption session keys
 crypto_box_getnonce(m_n);
 crypto_sign_keypair(m_sp, m_ss);
 crypto_box_keypair(m_cp, m_cs);
 
-//записываем публичные ключи ЭП и шифрования в сообщение для подписи и шифрования
+//write our signature and encryption public keys in message for signing and encryption
 memcpy(m, m_sp, crypto_sign_PUBLICKEYBYTES);
 memcpy(m+crypto_sign_PUBLICKEYBYTES, m_cp, crypto_box_PUBLICKEYBYTES);
 
-//подписываем сообщение c ключами нашим постоянным секретным ключом
+//sign that message through our persistent secret key
 crypto_sign(sm, &smlen, m, (crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES), Mm_ss);
-//перед шифрованием первые 32 байта сообщения должны быть заполнены нулями, добавляем их
+//first 32 bytes of message should be cleared before encryption, add 32 zero bytes
 bzero(&tm, crypto_box_ZEROBYTES);
 memcpy(tm+crypto_box_ZEROBYTES, sm, smlen);
 cmlen = smlen+crypto_box_ZEROBYTES;
-crypto_box_afternm(cm, tm, cmlen, m_n, M_ckey);	//шифрование cообщения постоянными ключами
-//после шифрования первые 16 байтов сообщения заполнены нулями, удаляем их
+crypto_box_afternm(cm, tm, cmlen, m_n, M_ckey);	//encryption of message through persistent keys
+//first 16 bytes of message are zero bytes, remove them
 tmlen = cmlen-crypto_box_BOXZEROBYTES;
 memcpy(tm,cm+crypto_box_BOXZEROBYTES,tmlen);
 
-//записываем нонс и зашифрованное сообщение с ключами в сообщение для передачи
+//write a nonce and encrypted message with public keys in final message
 memcpy(fm, m_n, crypto_box_NONCEBYTES);
 memcpy(fm+crypto_box_NONCEBYTES, tm, tmlen);
 
-//посылаем это сообщение собеседнику
+//write final message in socket for data exchange
 if (sendall(sock, (char *)fm, (crypto_box_NONCEBYTES+tmlen)) == -1) {
 	perror("sendall(m_n+m_sp+m_cp) error");
 	return 1;
 	}
 	
-//считаем нонс для следующего сообщения как первые 24 байта от хеша зашифрованного сообщения
+//get a nonce for our next message as first 24 bytes of hash of encrypted message
 crypto_hash(h, tm, tmlen);
 memcpy(m_n, h, crypto_box_NONCEBYTES);
 
-//принимаем начальный нонс собеседника
-bytes_real = recv(sock, x_n, crypto_box_NONCEBYTES, MSG_WAITALL);
-switch(bytes_real)
+//recieve a first companion's nonce
+really_recvieved = recv(sock, x_n, crypto_box_NONCEBYTES, MSG_WAITALL);
+switch(really_recvieved)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;};
@@ -648,10 +637,9 @@ switch(bytes_real)
 		return 1;};
 	}
 
-/*принимаем сообщение с сеансовыми ключами, расшифровываем его, проверяем его ЭП для использования
-этих ключей при последующем общении*/
-bytes_real = recv(sock, tm, tmlen, MSG_WAITALL);
-switch(bytes_real)
+//recieve a message with session public keys, decrypt it, check it's signature and use that keys
+really_recvieved = recv(sock, tm, tmlen, MSG_WAITALL);
+switch(really_recvieved)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		if (close(sock) != 0) {
@@ -665,34 +653,32 @@ switch(bytes_real)
 		return 1;};
 	}
 	
-/*считаем нонс для следующего сообщения как первые 24 байта от хеша подписанного и зашифрованного
-сообщения (запишем его на место старого в случае успешной проверки этого сообщения)*/
+/*get a nonce for companion's next message as first 24 bytes of hash of encrypted message (we will
+overwrite an old nonce if this message will be successfully authentificated)*/
 crypto_hash(h, tm, tmlen);
 memcpy(x_n_tmp, h, crypto_box_NONCEBYTES);
 
-/*после шифрования первые 16 символов сообщения были нулями, мы удалили их перед передачей, а
-теперь восстанавливаем*/
+//first 16 bytes should be zero bytes for successful decryption, add them
 bzero(&cm, crypto_box_BOXZEROBYTES);
-cmlen = bytes_real+crypto_box_BOXZEROBYTES;
-memcpy(cm+crypto_box_BOXZEROBYTES, tm, bytes_real);
+cmlen = really_recvieved+crypto_box_BOXZEROBYTES;
+memcpy(cm+crypto_box_BOXZEROBYTES, tm, really_recvieved);
 
-//пытаемся расшифровать сообщение
+//try to decrypt message
 if (crypto_box_open_afternm(tm, cm, cmlen, x_n, M_ckey) == -1) {
-	fprintf(stderr, "Error: failed to decrypt message with session keys.\n");
+	fprintf(stderr, "Error: failed to decrypt recieved message with session keys.\n");
 	return 1;
 	}
 else {
-	/*сообщение успешно расшифровано, теперь удаляем из него 32 начальных нуля, добавленных нами
-	для функции шифрования*/
-	memcpy(sm, tm+crypto_box_ZEROBYTES, bytes_real-crypto_box_BOXZEROBYTES);
+	//message has been successfully decrypted, delete first 32 zero bytes in the beginning
+	memcpy(sm, tm+crypto_box_ZEROBYTES, really_recvieved-crypto_box_BOXZEROBYTES);
 
-	//проверяем электронную подпись сообщения
-	if (crypto_sign_open(tm, &mlen, sm, bytes_real-crypto_box_BOXZEROBYTES, Mx_sp) == -1) {
-		fprintf(stderr, "Error: message with session keys has wrong signature.\n");
+	//check a signature of decrypted message
+	if (crypto_sign_open(tm, &mlen, sm, really_recvieved-crypto_box_BOXZEROBYTES, Mx_sp) == -1) {
+		fprintf(stderr, "Error: recieved message with session keys has wrong signature.\n");
 		return 1;
 		}
 	else {
-		//сообщение успешно прошло проверку, а значит, сохраняем полученные значения
+		//message was successfully authentificated, so save keys from it
 		memcpy(x_n, x_n_tmp, crypto_box_NONCEBYTES);
 		memcpy(x_sp, tm, crypto_sign_PUBLICKEYBYTES);
 		memcpy(x_cp, tm+crypto_sign_PUBLICKEYBYTES, crypto_box_PUBLICKEYBYTES);				
@@ -700,12 +686,12 @@ else {
 				
 	}	//else memcpy(sm)
 
-//собираем комбинацию секретного нашего и публичного ключа собеседника для ускорения работы
+//get a combination of our secret and companion's public keys for faster work
 crypto_box_beforenm(ckey, x_cp, m_cs);
 
-printf("Session keys exchange via network successfully done.\n");
+printf("Session keys exchange via network done.\n");
 
-//считаем и выводим хеш от сеансовых публичных ключей для защиты от атаки "человек посередине"
+//get hash of session public keys for protection against "man-in-the-middle" attack
 get_pubkeys_hash(m_sp, x_sp, m_cp, x_cp, (unsigned char **)&h);
 
 memcpy(out_m_ss, m_ss, crypto_sign_SECRETKEYBYTES);

@@ -33,7 +33,7 @@ License: public domain
 #define maxmlen 4000	//maximal length of user's text message
 #define varmlen maxmlen+crypto_sign_BYTES+crypto_box_ZEROBYTES
 //size of variables that contain messages during program's work
-#define version "0.08"	//program version
+#define version "0.09"	//program version
 
 void randombytes(unsigned char *x, unsigned long long xlen);
 //function that used in macros for nonce generation below

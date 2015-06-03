@@ -20,130 +20,119 @@ void *get_in_addr (struct sockaddr *sa)
 
 //--MAKE CONNECION AS SERVER-----------------------------------------------------------------------
 
-int go_server (unsigned int serv_port, int mode)
+int go_server (unsigned int serv_port, int net_protocol)
 {
 
-//--server launch---------------------------------------------------------------------------------
-
-char serv_port_str[10], cliaddr[INET6_ADDRSTRLEN]; //строка-номер порта сервера, строка-адрес клиента
+char serv_port_str[10], cliaddr[INET6_ADDRSTRLEN];
+//server port as string, client address as string
 int fresult, listensock, sock, cliport;
-//результат выполнения функции, сокеты для соединения и общения, номер порта клиента
-const int yes=1;						//переменная для работы функции setsockopt()
+//return of called function, sockets for connection and data exchange, cleint port number
+const int yes=1;						//variable for function setsockopt()
 struct addrinfo *servinfo, hints, *p;
-//массив информации о сервере, параметры сокета, указатель на текущую запись servinfo
-struct sockaddr_storage clinfo;			//информация о клиенте
-socklen_t clinfo_size=sizeof clinfo;
-/*размер информации о клиенте. инициализация здесь жизненно важна, иначе возникают ошибки и
-проблемы с accept()!*/
-struct sockaddr_in *s;		//временная запись для добычи IP-адреса и порта клиента из clinfo
-char datetime_str[50]; 		//текущие дата и время в строке
+//array of info about server, socket parameters, pointer to next record in servinfo
+struct sockaddr_storage clinfo;			//info about client
+socklen_t clinfo_size = sizeof clinfo;
+//size of clinfo; initialization there is really important to avoid errors & problems with accept()
+struct sockaddr_in *s;		//temporary record to get client IP and port number
+char datetime_str[50]; 		//date and time as string
 
 printf("Launching server on %i port...\n",serv_port);
 
-//настройка параметров сокета
-memset(&hints, 0, sizeof hints);		//обнуляем запись с параметрами сокета
-hints.ai_family = mode;					//используем IPv4 либо IPv6 в зависимости от режима
-hints.ai_socktype = SOCK_STREAM;		//используем потоковый сокет и протокол TCP
-hints.ai_flags = AI_PASSIVE;			//автоматическое заполнение IP-адреса текущего устройства
+//setting up socket
+memset(&hints, 0, sizeof hints);		//clear a record with socket parameters
+hints.ai_family = net_protocol;					//use IPv4 or IPv6 depending on user's choice
+hints.ai_socktype = SOCK_STREAM;		//use stream socket and TCP protocol
+hints.ai_flags = AI_PASSIVE;			//get IP address of this computer automatically
 
-//перевод номера порта сервера из int в char, необходимый для функции getaddrinfo()
+//convert server port from int to char for getaddrinfo()
 if (snprintf(serv_port_str, 10, "%d", serv_port)<0) {
 	fprintf(stderr,"snprintf(serv_port) error\n");
 	return 1;
 	}
 
-/*создаём запись servinfo с заданными настройками: IP-адрес - IP текущего устройства, порт -
-заданный ранее, настройки заданы в записи hints*/
+/*create a servinfo record, where IP address is current computer's IP, port is choosen by user,
+settings are written in hints record*/
 if ((fresult = getaddrinfo(NULL, serv_port_str, &hints, &servinfo)) != 0) {
 	fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(fresult));
-	//очищаем информацию о сервере, чтобы избежать утечек памяти; в дальнейшем поступаем так же
 	freeaddrinfo(servinfo);
 	return 1;
 }
 
-//проходим по всем результатам и осуществляем привязку к первому возможному
+//loop through all results and bind to first we can
 for(p = servinfo; p != NULL; p = p->ai_next) {
 
-	//создаём сокет, который будет ожидать подключения
+	//create a socket that will wait for client connection
 	if ((listensock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
 		perror("socket() error");
 		continue;
 		}
 
-	/*разрешаем повторное использование порта, чтобы избежать ошибки "bind() error: Address
-	already in use". она появляется при попытке перезапуске сервера спустя (примерно) менее минуты
-	после его закрытия. ошибка здесь не будет критичной, так что не завершаем работу. при
-	параноидальной заботе о приватности стоит убрать этот код.*/
+	/*allow port reusing to avoid "bind() error: address already in use" error. it appears if you
+	try to start server on port that was used for same reason less than a minute ago.*/
 	if (setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) != 0) {
 		perror("setsockopt() error");
 		continue;
 		}
 
-	//привязываем созданный сокет к заданному ранее порту на нашем устройстве
+	//bind newly created socket to port choosen by user
 	if ((bind(listensock, servinfo->ai_addr, servinfo->ai_addrlen)) != 0) {
-		perror("bind() error);
-		//напоследок закрываем открытый сокет
+		perror("bind() error");
+		//close that socket
 		if (close(listensock) != 0) perror("close(listensock) error");
 		continue;
-		}//if bind()
+		}	//if bind()
 		
 	break;
 
-	}//for()
+	}	//for()
 
-//если нам не удалось осуществить привязку, выдаём об этом сообщение и завершаем программу
+freeaddrinfo(servinfo);
+
+//if we could not bind
 if (p == NULL)  {
 	fprintf(stderr, "Error: can't bind to that port.\n");
-	freeaddrinfo(servinfo);
 	return 1;
 	}
 
-//нам больше не понадобится запись servinfo, очищаем её
-freeaddrinfo(servinfo);
-
-//ожидаем одного входящего соединения
+//wait for incoming connection from client
 if ((listen(listensock, 1)) != 0) {
 	perror("listen() error");
 	if (close(listensock) != 0) perror("close(listensock) error");
 	return 1;
 	}
 
-//принимаем входящее соединение, получая новый сокет для общения с клиентом
+//accept that connection and get a new socket to talk with client
 if ((sock = accept(listensock, (struct sockaddr *)&clinfo, &clinfo_size)) == -1) {
 	perror("accept() error");
 	if (close(listensock) != 0) perror("close(listensock) error");
 	return 1;
 	}
 
-/*закрываем сокет, ожидавший соединения, так как общение происходит через другой сокет. ошибка
-здесь не будет критичной, так что не завершаем работу. при повышенной заботе о приватности стоит
-изменить код: в случае ошибки закрыть новый сокет sock и завершить программу возвратом 1.*/
+//close a socket that waited for client connection
 if (close(listensock) != 0) perror("close(listensock) error");
 
-//вытаскиваем из записи clinfo IP-адрес и порт подключившегося устройства для вывода на экран
+//gea an IP address and port from clinfo record
 s = (struct sockaddr_in *)&clinfo;
 cliport = ntohs(s->sin_port);
 inet_ntop(clinfo.ss_family, get_in_addr((struct sockaddr *)&clinfo), cliaddr, sizeof cliaddr);
 
-//выясняем временя и дату начала беседы для вывода
-//ошибки здесь некритичны, так что не останавливаем работу программы при их появлении
-datetime(datetime_str);
+datetime(datetime_str);	//get date and time of connection
 
-printf("Клиент %s порт %i успешно подключился в %s", cliaddr, cliport, datetime_str);
+printf("Client %s port %i connected at %s", cliaddr, cliport, datetime_str);
 
 return sock;
 }
 
 //--MAKE CONNECION AS CLIENT-----------------------------------------------------------------------
 
-int go_client (const char *server_address, unsigned int serv_port, int mode)
+int go_client (const char *server_address, unsigned int serv_port, int net_protocol)
 {
 
-int fresult;			//результат выполнения функции
-struct sockaddr_in6 sa;	//запись для проверки и хранения IP-адреса сервера
+int fresult;			//return of called function
+struct sockaddr_in6 sa;	//record with server IP address
 
-//переводим IP-адрес на входе в понятный компьютеру формат
-fresult = inet_pton(mode, server_address, &(sa.sin6_addr));
+//convert IP address from string to system format
+fresult = inet_pton(net_protocol, server_address, &(sa.sin6_addr));
 switch(fresult)
 	{case 0: {
 		fprintf(stderr, "inet_pton() error: invalid IP address.\n");
@@ -153,96 +142,90 @@ switch(fresult)
 		return 1;};
 	}
 
-//--подключение к серверу--------------------------------------------------------------------------
+//--connect to server------------------------------------------------------------------------------
 
-char serv_port_str[10];				//строка-номер порта сервера
-int sock;							//сокет для общения
+char serv_port_str[10];		//server port as string
+int sock;					//socket for data exchange
 struct addrinfo *servinfo, hints, *p;
-//массив информации о сервере, параметры сокета, указатель на текущую запись servinfo
-char datetime_str[50]; 				//текущие дата и время в строке
+//array of info about server, socket parameters, pointer to next record in servinfo
+char datetime_str[50];		//date and time as string
 
-printf("Соединение с сервером %s порт %i...\n", server_address, serv_port);
+printf("Connecting to server %s port %i...\n", server_address, serv_port);
 
-//настройка параметров сокета
-memset(&hints, 0, sizeof hints);		//обнуляем запись с параметрами сокета
-hints.ai_family = mode;					//используем IPv4 либо IPv6 в зависимости от режима
-hints.ai_socktype = SOCK_STREAM;		//используем потоковый сокет и протокол TCP
+//setting up socket
+memset(&hints, 0, sizeof hints);		//clear a record with socket parameters
+hints.ai_family = net_protocol;					//use IPv4 or IPv6 depending on user's choice
+hints.ai_socktype = SOCK_STREAM;		//use stream socket and TCP protocol
 
-//перевод из int в char, необходимый для функции getaddrinfo()
+//convert server port from int to char for getaddrinfo()
 if (snprintf(serv_port_str, 10, "%d", serv_port)<0)
 	{fprintf(stderr,"snprintf(serv_port) error\n");
 	return 1;
 	}
 
-/*создаём запись servinfo с заданными настройками: IP-адрес - IP сервера, порт - заданный ранее,
-настройки заданы в записи hints*/
+/*create a servinfo record, where IP address is server IP, port is choosen by user, settings are
+written in hints record*/
 if ((fresult = getaddrinfo(server_address, serv_port_str, &hints, &servinfo)) != 0) {
 	fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(fresult));
-	//напоследок очищаем информацию о сервере, чтобы избежать утечек памяти
 	freeaddrinfo(servinfo);
 	return 1;
 	}
 
-
-//проходим по всем результатам и осуществляем подключение к первому возможному
+//loop through all results and connect to first we can
 for(p = servinfo; p != NULL; p = p->ai_next) {
 
-	//создаём сокет для последующей работы с ним, используя запись servinfo
+	//create a socket that will be used for data exchange
 	if ((sock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
 		perror("socket() error");
 		freeaddrinfo(servinfo);
 		continue;
 		}
 
-	//устанавливаем соединение с сервером по заданному адресу и порту
+	//connect to server with IP and port choosen by user
 	if ((connect(sock, servinfo->ai_addr, servinfo->ai_addrlen)) != 0) {
 		perror("connect() error");
 		freeaddrinfo(servinfo);
-		//напоследок закрываем открытый сокет
 		if (close(sock) != 0) perror("close() error");
 		continue;
-		}//if connect()
+		}	//if connect()
 		
 	break;
 	
-	}//for()
-	
-//если нам не удалось осуществить подключение, выдаём об этом сообщение и завершаем программу
+	}	//for()
+
+freeaddrinfo(servinfo);
+
+//if we could not connect
 if (p == NULL)  {
 	fprintf(stderr, "Error: cannot connect to server.\n");
 	return 1;
 	}
 
-//нам больше не понадобится запись servinfo, очищаем её
-freeaddrinfo(servinfo);
+datetime(datetime_str);	//get date and time of connection
 
-//выясняем время и дату начала беседы для вывода
-//ошибки здесь некритичны, так что не останавливаем работу программы при их появлении
-datetime(datetime_str);
-
-printf("Подключение успешно выполенено в %s",datetime_str);
+printf("Connected to server at %s",datetime_str);
 
 return sock;
 }
 
 //--SEND THE WHOLE MESSAGE-----------------------------------------------------------------------
 
-/*эта функция заставляет функцию send() попытаться передать всё сообщение, что не предусмотрено по
-умолчанию*/
+/*this function forces send() function try to send the whole message - send() don't do it by
+default*/
 int sendall (int sock, char *buf, int len)
 {
 
-//количество отправленных байтов, количество байтов в очереди, возвращаемое send() значение
+//bytes sent, bytes left to send, send() result
 int total = 0, bytesleft = len, fresult;
 
 while(total < len) {
 	fresult = send(sock, buf+total, bytesleft, 0);
-	if (fresult == -1) break;	//произошла ошибка, выходим из цикла
+	if (fresult == -1) break;	//an error occured
 	total = total + fresult;
 	bytesleft = bytesleft - fresult;
 	}
 
-    return fresult==-1?-1:0;	//возвращаем -1 при ошибке, 0 при успешном выполнении
+    return fresult==-1?-1:0;	//return -1 if an error occured, 0 otherwise
 }
 
 //--GET DATE AND TIME------------------------------------------------------------------------------

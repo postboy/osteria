@@ -10,7 +10,7 @@
   </object>
   <object class="GtkApplicationWindow" id="settings_window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Настройка соединения</property>
+    <property name="title" translatable="yes">Connection settings</property>
     <property name="resizable">False</property>
     <property name="window_position">center</property>
     <property name="icon_name">mail-forward</property>
@@ -34,7 +34,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Сетевая роль</property>
+                <property name="label" translatable="yes">Network role</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -49,8 +49,8 @@
                 <property name="can_focus">False</property>
                 <property name="active">0</property>
                 <items>
-                  <item id="&lt;Enter ID&gt;" translatable="yes">клиент</item>
-                  <item id="&lt;Enter ID&gt;" translatable="yes">сервер</item>
+                  <item id="&lt;Enter ID&gt;" translatable="yes">client</item>
+                  <item id="&lt;Enter ID&gt;" translatable="yes">server</item>
                 </items>
               </object>
               <packing>
@@ -65,7 +65,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Адрес сервера</property>
+                <property name="label" translatable="yes">Server address</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -93,7 +93,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Ключи</property>
+                <property name="label" translatable="yes">Keys</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -108,9 +108,9 @@
                 <property name="can_focus">False</property>
                 <property name="active">0</property>
                 <items>
-                  <item id="&lt;Enter ID&gt;" translatable="yes">обменяться по сети</item>
-                  <item translatable="yes">загрузить с диска</item>
-                  <item translatable="yes">записать на диск</item>
+                  <item id="&lt;Enter ID&gt;" translatable="yes">exchange via network</item>
+                  <item translatable="yes">load from files</item>
+                  <item translatable="yes">write to files</item>
                 </items>
               </object>
               <packing>
@@ -125,7 +125,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Порт сервера</property>
+                <property name="label" translatable="yes">Server port</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -139,7 +139,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Имя собеседника</property>
+                <property name="label" translatable="yes">Companion's name</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -166,7 +166,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
-                <property name="label" translatable="yes">Сетевой протокол</property>
+                <property name="label" translatable="yes">Network protocol</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -198,7 +198,7 @@
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="ypad">5</property>
-                <property name="label" translatable="yes">Расширенные настройки</property>
+                <property name="label" translatable="yes">Advanced settings</property>
                 <attributes>
                   <attribute name="weight" value="semibold"/>
                 </attributes>
@@ -245,7 +245,7 @@
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="exit_button">
-                <property name="label" translatable="yes">Выход</property>
+                <property name="label" translatable="yes">Exit</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -259,7 +259,7 @@
             </child>
             <child>
               <object class="GtkButton" id="about_button">
-                <property name="label" translatable="yes">О программе</property>
+                <property name="label" translatable="yes">About</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -273,7 +273,7 @@
             </child>
             <child>
               <object class="GtkButton" id="launch_button">
-                <property name="label" translatable="yes">Запуск</property>
+                <property name="label" translatable="yes">Launch</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
