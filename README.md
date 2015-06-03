@@ -1,4 +1,5 @@
-# Osteria 0.09, secure point-to-point messenger
+# Osteria 0.09
+## secure point-to-point messenger
 Offers an example code in fields of network programming using [Berkeley sockets] (https://en.wikipedia.org/wiki/Berkeley_sockets), GUI programming using [GTK+] (http://www.gtk.org) and applied cryptography programming using [TweetNaCl] (http://tweetnacl.cr.yp.to).
 Licence: BSD 2-clause with public domain parts.
 
