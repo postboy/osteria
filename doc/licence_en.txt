@@ -1,4 +1,4 @@
-The BSD 2-Clause License
+The BSD 2-Clause License (original)
 
 Copyright (c) 2014-2015, Zubov Ivan
 All rights reserved.

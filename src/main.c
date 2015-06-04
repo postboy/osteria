@@ -27,7 +27,7 @@ sm[varmlen];
 //encryption, we: persistent public and secret keys, nonce
 unsigned char Mm_cp[crypto_box_PUBLICKEYBYTES], Mm_cs[crypto_box_SECRETKEYBYTES],
 m_n[crypto_box_NONCEBYTES],
-//encryption, companion: persistent public key, nonce, temporary nonce
+//encryption, companion: persistent public key, nonce, unverified nonce
 Mx_cp[crypto_box_PUBLICKEYBYTES], x_n[crypto_box_NONCEBYTES], x_n_tmp[crypto_box_NONCEBYTES],
 /*encryption, both sides: encrypted and temporary messages, combination of (session and persistent)
 our secret and companion's public keys, hash for nonce generation*/

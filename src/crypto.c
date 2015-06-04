@@ -585,7 +585,7 @@ unsigned long long smlen;
 //encryption, we: session public and secret keys, nonce
 unsigned char m_cp[crypto_box_PUBLICKEYBYTES], m_cs[crypto_box_SECRETKEYBYTES],
 m_n[crypto_box_NONCEBYTES],
-//encryption, companion: session public key, nonce, temorary nonce
+//encryption, companion: session public key, nonce, unverified nonce
 x_cp[crypto_box_PUBLICKEYBYTES], x_n[crypto_box_NONCEBYTES], x_n_tmp[crypto_box_NONCEBYTES],
 /*encryption, both sides: encrypted and temporary messages, combination of our secret and
 companion's public keys, hash for nonce generation, lengths of encrypted and temporary messages*/
