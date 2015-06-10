@@ -131,17 +131,17 @@ char temp[10];	//buffer for temporary output
 int i;			//variable for cycle
 
 for (i=0; i < crypto_hash_BYTES; i++) {
-	snprintf(temp, 2, "%02x", h[i]);	//output format of hash is HEX-code
+	snprintf(temp, 4, "%02x", h[i]);	//output format of hash is HEX-code
 	gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
 	
-	//place a line feed every 32 bytes
-	if ((i+1) % 32 == 0) {
+	//place a line feed every 16 bytes
+	if ((i+1) % 16 == 0) {
 		snprintf(temp, 2, "\n");
 		gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
 		}
 
-	//place a space every 4 bytes
-	else if ((i+1) % 4 == 0) {
+	//place a space every 2 bytes
+	else if ((i+1) % 2 == 0) {
 		snprintf(temp, 2, " ");
 		gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
 		}
