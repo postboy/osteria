@@ -1,3 +1,4 @@
-#exclude a compiled program and a directory with persistent keys
+#exclude a compiled program, directory with persistent keys and temporary files
 ost
 /keys
+*~

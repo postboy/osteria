@@ -513,20 +513,6 @@ int crypto_box_open_afternm(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *k)
   return crypto_secretbox_open(m,c,d,n,k);
 }
 
-int crypto_box(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *y,const u8 *x)
-{
-  u8 k[32];
-  crypto_box_beforenm(k,y,x);
-  return crypto_box_afternm(c,m,d,n,k);
-}
-
-int crypto_box_open(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *y,const u8 *x)
-{
-  u8 k[32];
-  crypto_box_beforenm(k,y,x);
-  return crypto_box_open_afternm(m,c,d,n,k);
-}
-
 static u64 R(u64 x,int c) { return (x >> c) | (x << (64 - c)); }
 static u64 Ch(u64 x,u64 y,u64 z) { return (x & y) ^ (~x & z); }
 static u64 Maj(u64 x,u64 y,u64 z) { return (x & y) ^ (x & z) ^ (y & z); }
