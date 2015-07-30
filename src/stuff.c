@@ -59,7 +59,7 @@ if ((fresult = getaddrinfo(NULL, serv_port_str, &hints, &servinfo)) != 0) {
 }
 
 //loop through all results and bind to first we can
-for(p = servinfo; p != NULL; p = p->ai_next) {
+for (p = servinfo; p != NULL; p = p->ai_next) {
 
 	//create a socket that will wait for client connection
 	if ((listensock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
@@ -84,7 +84,7 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 		
 	break;
 
-	}	//for()
+	}	//for
 
 freeaddrinfo(servinfo);
 
@@ -172,7 +172,7 @@ if ((fresult = getaddrinfo(server_address, serv_port_str, &hints, &servinfo)) !=
 	}
 
 //loop through all results and connect to first we can
-for(p = servinfo; p != NULL; p = p->ai_next) {
+for (p = servinfo; p != NULL; p = p->ai_next) {
 
 	//create a socket that will be used for data exchange
 	if ((sock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
@@ -191,7 +191,7 @@ for(p = servinfo; p != NULL; p = p->ai_next) {
 		
 	break;
 	
-	}	//for()
+	}	//for
 
 freeaddrinfo(servinfo);
 
