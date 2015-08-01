@@ -7,7 +7,7 @@ License: BSD 2-Clause
 
 //--GET HASH OF SIGNATURE AND ENCRYPTION PUBLIC KEYS-----------------------------------------------
 
-void get_pubkeys_hash (unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
+static void get_pubkeys_hash (unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char x_cp[crypto_box_PUBLICKEYBYTES],
@@ -52,7 +52,7 @@ memcpy(out_h, h, crypto_hash_BYTES);
 
 //--GENERATION OF FILES WITH PERSISTENT KEYS-------------------------------------------------------
 
-int generate_key_files (const char *companion_name)
+extern int generate_key_files (const char *companion_name)
 {
 
 FILE *fp;			//file variable
@@ -167,7 +167,7 @@ return 0;
 
 //--SAVING CURRENT SESSION'S PERSISTENT KEYS TO FILES----------------------------------------------
 
-int save_current_keys (const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int save_current_keys (const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_cp[crypto_box_PUBLICKEYBYTES],
@@ -304,7 +304,7 @@ return 0;
 
 //--LOAD PERSISTENT KEYS FROM FILES----------------------------------------------------------------
 
-int load_key_files (const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int load_key_files (const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_cp[crypto_box_PUBLICKEYBYTES],
@@ -476,7 +476,7 @@ return 0;
 
 //--PERSISTENT KEYS EXCHANGE VIA NETWORK-----------------------------------------------------------
 
-int net_key_exchange (int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int net_key_exchange (int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_cp[crypto_box_PUBLICKEYBYTES],
@@ -558,7 +558,7 @@ return 0;
 
 //--SESSION KEYS EXCHANGE VIA NETWORK--------------------------------------------------------------
 
-int create_session_keys (int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
+extern int create_session_keys (int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char Mx_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char M_ckey[crypto_box_BEFORENMBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
@@ -593,7 +593,7 @@ cm[varmlen], tm[varmlen], ckey[crypto_box_BEFORENMBYTES], h[crypto_hash_BYTES];
 unsigned long long cmlen, tmlen;
 
 //generate our first nonce, signature and encryption session keys
-crypto_box_getnonce(m_n);
+randombytes(m_n, crypto_box_NONCEBYTES);
 crypto_sign_keypair(m_sp, m_ss);
 crypto_box_keypair(m_cp, m_cs);
 

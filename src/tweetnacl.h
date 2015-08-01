@@ -42,6 +42,9 @@ someone may need this list for re-using Osteria code:
 
 //all defines below is just for code pithiness
 
+extern void randombytes (unsigned char *x,unsigned long long xlen);
+//this function is used for first nonce generation
+
 #define crypto_box_keypair crypto_box_curve25519xsalsa20poly1305_tweet_keypair
 #define crypto_box_beforenm crypto_box_curve25519xsalsa20poly1305_tweet_beforenm
 #define crypto_box_afternm crypto_box_curve25519xsalsa20poly1305_tweet_afternm
@@ -56,10 +59,6 @@ extern int crypto_box_curve25519xsalsa20poly1305_tweet_open_afternm(unsigned cha
 #define crypto_box_NONCEBYTES 24
 #define crypto_box_ZEROBYTES 32
 #define crypto_box_BOXZEROBYTES 16
-void randombytes(unsigned char *x, unsigned long long xlen);
-//function that used in macros for nonce generation below
-#define crypto_box_getnonce(n) randombytes(n, crypto_box_NONCEBYTES)
-//macros for nonce generation
 
 #define crypto_hash crypto_hash_sha512_tweet
 extern int crypto_hash_sha512_tweet(unsigned char *,const unsigned char *,unsigned long long);

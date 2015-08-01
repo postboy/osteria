@@ -8,7 +8,7 @@ License: BSD 2-Clause
 
 //--GET SOCKADDR RECORD FOR IPv4 OR IPv6-----------------------------------------------------------
 
-void *get_in_addr (struct sockaddr *sa)
+static void *get_in_addr (struct sockaddr *sa)
 {
 	//if we use IPv4, act accordingly
 	if (sa->sa_family == AF_INET)
@@ -20,7 +20,7 @@ void *get_in_addr (struct sockaddr *sa)
 
 //--MAKE CONNECION AS SERVER-----------------------------------------------------------------------
 
-int go_server (unsigned int serv_port, int net_protocol)
+extern int go_server (unsigned int serv_port, int net_protocol)
 {
 
 char serv_port_str[10], cliaddr[INET6_ADDRSTRLEN];
@@ -125,7 +125,7 @@ return sock;
 
 //--MAKE CONNECION AS CLIENT-----------------------------------------------------------------------
 
-int go_client (const char *server_address, unsigned int serv_port, int net_protocol)
+extern int go_client (const char *server_address, unsigned int serv_port, int net_protocol)
 {
 
 int fresult;			//return of called function
@@ -212,7 +212,7 @@ return sock;
 
 /*this function forces send() function try to send the whole message - send() don't do it by
 default*/
-int sendall (int sock, char *buf, int len)
+extern int sendall (int sock, char *buf, int len)
 {
 
 //bytes sent, bytes left to send, send() result
@@ -230,7 +230,7 @@ while(total < len) {
 
 //--GET DATE AND TIME------------------------------------------------------------------------------
 
-int datetime (char datetime_str[50])
+extern int datetime (char datetime_str[50])
 {
 
 time_t timer;
@@ -259,7 +259,7 @@ return 0;
 
 //--GET TIME---------------------------------------------------------------------------------------
 
-int time_talk (char time_str[15])
+extern int time_talk (char time_str[15])
 {
 
 time_t timer;

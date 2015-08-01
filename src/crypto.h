@@ -10,16 +10,16 @@ License: BSD 2-Clause
 #include "stuff.h"
 
 //generation of files with persistent keys
-int generate_key_files(const char *companion_name);
+extern int generate_key_files(const char *companion_name);
 //saving current session's persistent keys to files
-int save_current_keys(const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int save_current_keys(const char *companion_name, unsigned char m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char m_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char m_cs[crypto_box_SECRETKEYBYTES],
 						unsigned char x_cp[crypto_box_PUBLICKEYBYTES]);
 //load persistent keys from files
-int load_key_files(const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int load_key_files(const char *companion_name, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_cp[crypto_box_PUBLICKEYBYTES],
@@ -27,7 +27,7 @@ int load_key_files(const char *companion_name, unsigned char *out_m_sp[crypto_si
 						unsigned char *out_x_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char *out_h[crypto_hash_BYTES]);
 //persistent keys exchange via network
-int net_key_exchange(int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
+extern int net_key_exchange(int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char *out_x_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char *out_m_cp[crypto_box_PUBLICKEYBYTES],
@@ -35,7 +35,7 @@ int net_key_exchange(int sock, unsigned char *out_m_sp[crypto_sign_PUBLICKEYBYTE
 						unsigned char *out_x_cp[crypto_box_PUBLICKEYBYTES],
 						unsigned char *out_h[crypto_hash_BYTES]);
 //session keys exchange via network
-int create_session_keys(int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
+extern int create_session_keys(int sock, unsigned char Mm_ss[crypto_sign_SECRETKEYBYTES],
 						unsigned char Mx_sp[crypto_sign_PUBLICKEYBYTES],
 						unsigned char M_ckey[crypto_box_BEFORENMBYTES],
 						unsigned char *out_m_ss[crypto_sign_SECRETKEYBYTES],

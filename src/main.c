@@ -6,18 +6,18 @@ License: BSD 2-Clause
 #include "crypto.h"
 
 //all that variables are declared as global for easy using in handlers
-GtkWidget *server_address_txt, *companion_name_txt, *net_role_combo, *keys_combo,
+static GtkWidget *server_address_txt, *companion_name_txt, *net_role_combo, *keys_combo,
 *net_protocol_combo, *port_spin;	//pointers to GUI elements
-GtkTextView *out_view;				//pointer to output view
-GtkTextBuffer *in_buf, *out_buf;	//pointers to text buffers
+static GtkTextView *out_view;				//pointer to output view
+static GtkTextBuffer *in_buf, *out_buf;	//pointers to text buffers
 //pointer to string from input field
-const gchar *companion_name = NULL;
+static const gchar *companion_name = NULL;
 /*socket for data exchange, does persistent keys for that companion exists: 0 - continue writing,
 2 - abort it*/
-int sock, keys_exist = 2;
+static int sock, keys_exist = 2;
 
 //signatures, we: session secret key, persistent public and secret keys
-unsigned char m_ss[crypto_sign_SECRETKEYBYTES], Mm_sp[crypto_sign_PUBLICKEYBYTES],
+static unsigned char m_ss[crypto_sign_SECRETKEYBYTES], Mm_sp[crypto_sign_PUBLICKEYBYTES],
 Mm_ss[crypto_sign_SECRETKEYBYTES],
 //signatures, companion: session public key, persistent public key
 x_sp[crypto_sign_PUBLICKEYBYTES], Mx_sp[crypto_sign_PUBLICKEYBYTES],
@@ -25,7 +25,7 @@ x_sp[crypto_sign_PUBLICKEYBYTES], Mx_sp[crypto_sign_PUBLICKEYBYTES],
 sm[varmlen];
 
 //encryption, we: persistent public and secret keys, nonce
-unsigned char Mm_cp[crypto_box_PUBLICKEYBYTES], Mm_cs[crypto_box_SECRETKEYBYTES],
+static unsigned char Mm_cp[crypto_box_PUBLICKEYBYTES], Mm_cs[crypto_box_SECRETKEYBYTES],
 m_n[crypto_box_NONCEBYTES],
 //encryption, companion: persistent public key, nonce, unverified nonce
 Mx_cp[crypto_box_PUBLICKEYBYTES], x_n[crypto_box_NONCEBYTES], x_n_tmp[crypto_box_NONCEBYTES],
@@ -35,16 +35,16 @@ cm[varmlen], tm[varmlen], ckey[crypto_box_BEFORENMBYTES], M_ckey[crypto_box_BEFO
 h[crypto_hash_BYTES];
 
 //hashes of persistent and session public keys for protection against "man-in-the-middle" attack
-unsigned char Mh[crypto_hash_BYTES], Sh[crypto_hash_BYTES];
+static unsigned char Mh[crypto_hash_BYTES], Sh[crypto_hash_BYTES];
 
 /*lengths of messages: original, signed, encrypted, temporary (in usual format and in format for
 network sending), final; number of really recieved bytes*/
-unsigned long long mlen, smlen, cmlen, tmlen, fmlen, really_recvieved;
-uint16_t tmlen_network;
+static unsigned long long mlen, smlen, cmlen, tmlen, fmlen, really_recvieved;
+static uint16_t tmlen_network;
 
 //--BEGIN AND END INSERTION IN OUTPUT BUFFER-------------------------------------------------------
 
-void begin_insert ()
+static void begin_insert ()
 {
 	GtkTextIter end_iter;	//end iterator
 
@@ -53,7 +53,7 @@ void begin_insert ()
 	gtk_text_buffer_place_cursor(out_buf, &end_iter);
 }
 
-void end_insert ()
+static void end_insert ()
 {
 	GtkTextMark *mk_end;	//position in buffer for it's scrolling after insert
 
@@ -65,7 +65,7 @@ void end_insert ()
 //--CHECK FOR EXISTENCE OF SAVED PERMANENT KEYS----------------------------------------------------
 
 //reading user's choice in dialog window
-void check_user_choice (GtkDialog *dialog, gint response_id)
+static void check_user_choice (GtkDialog *dialog, gint response_id)
 {
 	//if user pressed "yes" then rewrite keys
 	if (response_id == GTK_RESPONSE_YES)
@@ -75,7 +75,7 @@ void check_user_choice (GtkDialog *dialog, gint response_id)
 }
 
 //existence check with a dialog window
-int is_keys_exist (GtkWidget *parent_window)
+static int is_keys_exist (GtkWidget *parent_window)
 {
 	//variables for dialog window creation
 	GtkWidget *dialog;
@@ -124,57 +124,57 @@ int is_keys_exist (GtkWidget *parent_window)
 
 //--PRINT A HASH OF PUBLIC KEYS--------------------------------------------------------------------
 
-void show_pubkeys_hash (unsigned char h[crypto_hash_BYTES])
+static void show_pubkeys_hash (unsigned char h[crypto_hash_BYTES])
 {
 
-char temp[10];	//buffer for temporary output
-int i;			//variable for cycle
+	char temp[10];	//buffer for temporary output
+	int i;			//variable for cycle
 
-for (i=0; i < crypto_hash_BYTES; i++) {
-	snprintf(temp, 4, "%02x", h[i]);	//output format of hash is HEX-code
-	gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
+	for (i=0; i < crypto_hash_BYTES; i++) {
+		snprintf(temp, 4, "%02x", h[i]);	//output format of hash is HEX-code
+		gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
 	
-	//place a line feed every 16 bytes
-	if ((i+1) % 16 == 0) {
-		snprintf(temp, 2, "\n");
-		gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
-		}
+		//place a line feed every 16 bytes
+		if ((i+1) % 16 == 0) {
+			snprintf(temp, 2, "\n");
+			gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
+			}
 
-	//place a space every 2 bytes
-	else if ((i+1) % 2 == 0) {
-		snprintf(temp, 2, " ");
-		gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
-		}
+		//place a space every 2 bytes
+		else if ((i+1) % 2 == 0) {
+			snprintf(temp, 2, " ");
+			gtk_text_buffer_insert_at_cursor(out_buf, temp, -1);
+			}
 		
-    };	//for
+    	};	//for
 
 }
 
 //--ABOUT WINDOW-----------------------------------------------------------------------------------
 
-void show_about ()
+static void show_about ()
 {
 
-GtkBuilder *builder;	//pointer to service structure (free after work)
-GtkWidget *about_win;	//pointer to window
+	GtkBuilder *builder;	//pointer to service structure (free after work)
+	GtkWidget *about_win;	//pointer to window
 
-//load "about" window
-builder = gtk_builder_new();
-gtk_builder_add_from_file(builder, "gui/about.glade", NULL);
+	//load "about" window
+	builder = gtk_builder_new();
+	gtk_builder_add_from_file(builder, "gui/about.glade", NULL);
 
-//close window if "close" button is pressed
-about_win = GTK_WIDGET(gtk_builder_get_object(builder, "about_window"));
-g_signal_connect(G_OBJECT(about_win), "response", G_CALLBACK(gtk_widget_destroy), about_win);
+	//close window if "close" button is pressed
+	about_win = GTK_WIDGET(gtk_builder_get_object(builder, "about_window"));
+	g_signal_connect(G_OBJECT(about_win), "response", G_CALLBACK(gtk_widget_destroy), about_win);
 
-g_object_unref(G_OBJECT(builder));
+	g_object_unref(G_OBJECT(builder));
 
-gtk_widget_show_all(about_win);
+	gtk_widget_show_all(about_win);
 
 }
 
 //--READING FROM INPUT BUFFER AND MESSAGE SENDING--------------------------------------------------
 
-void send_message ()
+static void send_message ()
 {
 
 GtkTextIter start_iter, end_iter;	//start and end iterators
@@ -256,141 +256,142 @@ return;
 
 //--"THERE'S AN INPUT DATA IN SOCKET" EVENT HANDLER------------------------------------------------
 
-gboolean sock_GIO_handler(GIOChannel *source, GIOCondition condition, gpointer data)
+static gboolean sock_GIO_handler(GIOChannel *source, GIOCondition condition, gpointer data)
 {
 
-unsigned char m[varmlen];	//message from companion
-//lengths of encrypted and temporary messages (in usual format and in format for network exchange)
-unsigned long long mlen, cmlen, tmlen;
-uint16_t tmlen_network;
+	unsigned char m[varmlen];	//message from companion
+	/*lengths of encrypted and temporary messages (in usual format and in format for network
+	exchange*/
+	unsigned long long mlen, cmlen, tmlen;
+	uint16_t tmlen_network;
 
-char time_str[15];			//current time
+	char time_str[15];			//current time
 
-if (sock == 0) return FALSE;
+	if (sock == 0) return FALSE;
 
-//recieve a size of companion's encrypted message
-really_recvieved = recv(sock, &tmlen_network, sizeof(uint16_t), MSG_WAITALL);
-switch(really_recvieved) {
-	case 0: {
+	//recieve a size of companion's encrypted message
+	really_recvieved = recv(sock, &tmlen_network, sizeof(uint16_t), MSG_WAITALL);
+	switch(really_recvieved) {
+		case 0: {
 	
-		if (close(sock) != 0) perror("close(sock) error");
-		sock = 0;
+			if (close(sock) != 0) perror("close(sock) error");
+			sock = 0;
 		
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.\n", -1);
+			end_insert();
+		
+			return FALSE;
+			};
+		case -1: {
+
+			perror("recv(tmlen) error");
+			if (close(sock) != 0) perror("close(sock) error");
+			sock = 0;
+		
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nCritical error occured. Connection will be closed.\n", -1);
+			end_insert();
+		
+			return FALSE;
+			};
+		}
+		
+	//convert it to format suitable for processing on current computer
+	tmlen = ntohs(tmlen_network);
+	//simplest protection against wrong size of incoming message, needs serious improvement
+	if (tmlen > varmlen)
+		tmlen = varmlen;
+
+	//recieve a message with known length, decrypt it, check it's signature and print it
+	really_recvieved = recv(sock, tm, tmlen, MSG_WAITALL);
+	switch(really_recvieved) {
+		case 0: {
+		
+			if (close(sock) != 0) perror("close(sock) error");
+			sock = 0;
+		
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.\n", -1);
+			end_insert();
+		
+			return FALSE;
+			};
+		case -1: {
+		
+			perror("recv(m) error");
+			if (close(sock) != 0) perror("close(sock) error");
+			sock = 0;
+		
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nCritical error occured. Connection will be closed.\n", -1);
+			end_insert();
+		
+			return FALSE;
+			};
+		}
+
+	/*get a nonce for companion's next message as first 24 bytes of hash of encrypted message (we
+	will overwrite an old nonce if this message will be successfully authentificated)*/
+	crypto_hash(h, tm, tmlen);
+	memcpy(x_n_tmp, h, crypto_box_NONCEBYTES);
+
+	//first 16 bytes should be zero bytes for successful decryption, add them
+	bzero(&cm, crypto_box_BOXZEROBYTES);
+	cmlen = really_recvieved+crypto_box_BOXZEROBYTES;
+	memcpy(cm+crypto_box_BOXZEROBYTES, tm, really_recvieved);
+
+	//try to decrypt message
+	if (crypto_box_open_afternm(tm, cm, cmlen, x_n, ckey) == -1) {
+
 		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.\n", -1);
-		end_insert();
-		
-		return FALSE;
-		};
-	case -1: {
-
-		perror("recv(tmlen) error");
-		if (close(sock) != 0) perror("close(sock) error");
-		sock = 0;
-		
-		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nCritical error occured. Connection will be closed.\n", -1);
-		end_insert();
-		
-		return FALSE;
-		};
-	}
-		
-//convert it to format suitable for processing on current computer
-tmlen = ntohs(tmlen_network);
-//simplest protection against wrong size of incoming message, needs serious improvement
-if (tmlen > varmlen)
-	tmlen = varmlen;
-
-//recieve a message with known length, decrypt it, check it's signature and print it
-really_recvieved = recv(sock, tm, tmlen, MSG_WAITALL);
-switch(really_recvieved)
-	{case 0: {
-		
-		if (close(sock) != 0) perror("close(sock) error");
-		sock = 0;
-		
-		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nCompanion closed the connection.\n", -1);
-		end_insert();
-		
-		return FALSE;
-		};
-	case -1: {
-		
-		perror("recv(m) error");
-		if (close(sock) != 0) perror("close(sock) error");
-		sock = 0;
-		
-		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nCritical error occured. Connection will be closed.\n", -1);
-		end_insert();
-		
-		return FALSE;
-		};
-	}
-
-/*get a nonce for companion's next message as first 24 bytes of hash of encrypted message (we will
-overwrite an old nonce if this message will be successfully authentificated)*/
-crypto_hash(h, tm, tmlen);
-memcpy(x_n_tmp, h, crypto_box_NONCEBYTES);
-
-//first 16 bytes should be zero bytes for successful decryption, add them
-bzero(&cm, crypto_box_BOXZEROBYTES);
-cmlen = really_recvieved+crypto_box_BOXZEROBYTES;
-memcpy(cm+crypto_box_BOXZEROBYTES, tm, really_recvieved);
-
-//try to decrypt message
-if (crypto_box_open_afternm(tm, cm, cmlen, x_n, ckey) == -1) {
-
-	begin_insert();
-	gtk_text_buffer_insert_at_cursor(out_buf, "\nError: failed to decrypt recieved message.\n", -1);
-	end_insert();
-
-	}
-else {
-	//message has been successfully decrypted, delete first 32 zero bytes in the beginning
-	memcpy(sm, tm+crypto_box_ZEROBYTES, really_recvieved-crypto_box_BOXZEROBYTES);
-
-	//check a signature of decrypted message
-	if (crypto_sign_open(tm, &mlen, sm, really_recvieved-crypto_box_BOXZEROBYTES, x_sp) == -1) {
-	
-		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\nError: recieved message has wrong signature.\n", -1);
+		gtk_text_buffer_insert_at_cursor(out_buf, "\nError: failed to decrypt recieved message.\n", -1);
 		end_insert();
 
 		}
 	else {
-		
-		//message was successfully authentificated, print it
-		memcpy(m, tm, mlen);
-		//let's be sure that there's at least one end of line symbol in message
-		m[mlen] = '\0';
-		
-		time_talk(time_str);
+		//message has been successfully decrypted, delete first 32 zero bytes in the beginning
+		memcpy(sm, tm+crypto_box_ZEROBYTES, really_recvieved-crypto_box_BOXZEROBYTES);
 
-		begin_insert();
-		gtk_text_buffer_insert_at_cursor(out_buf, "\n", -1);
-		gtk_text_buffer_insert_at_cursor(out_buf, companion_name, -1);
-		gtk_text_buffer_insert_at_cursor(out_buf, time_str, -1);
-		gtk_text_buffer_insert_at_cursor(out_buf, (const gchar *)m, -1);
-		end_insert();
+		//check a signature of decrypted message
+		if (crypto_sign_open(tm, &mlen, sm, really_recvieved-crypto_box_BOXZEROBYTES, x_sp) == -1) {
+	
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\nError: recieved message has wrong signature.\n", -1);
+			end_insert();
+
+			}
+		else {
+		
+			//message was successfully authentificated, print it
+			memcpy(m, tm, mlen);
+			//let's be sure that there's at least one end of line symbol in message
+			m[mlen] = '\0';
+		
+			time_talk(time_str);
+
+			begin_insert();
+			gtk_text_buffer_insert_at_cursor(out_buf, "\n", -1);
+			gtk_text_buffer_insert_at_cursor(out_buf, companion_name, -1);
+			gtk_text_buffer_insert_at_cursor(out_buf, time_str, -1);
+			gtk_text_buffer_insert_at_cursor(out_buf, (const gchar *)m, -1);
+			end_insert();
 					
-		//message was successfully authentificated, rewrite the nonce
-		memcpy(x_n, x_n_tmp, crypto_box_NONCEBYTES);
+			//message was successfully authentificated, rewrite the nonce
+			memcpy(x_n, x_n_tmp, crypto_box_NONCEBYTES);
 							
-		}	//else memcpy(m)
+			}	//else memcpy(m)
 				
-	}	//else memcpy(sm)
+		}	//else memcpy(sm)
 
-return TRUE;
+	return TRUE;
 	
 }
 
 //--TALK WINDOW------------------------------------------------------------------------------------
 
 //"save keys" menu item handler
-int save_handler (GtkWidget *talk_win)
+static int save_handler (GtkWidget *talk_win)
 {
 	int fresult;	//return of called function
 	
@@ -424,7 +425,7 @@ int save_handler (GtkWidget *talk_win)
 }
 
 //"close connection" menu item handler
-void close_handler ()
+static void close_handler ()
 {
 	//if socket for data exchange isn't closed then close it
 	if (sock != 0) {
@@ -442,7 +443,7 @@ void close_handler ()
 }
 
 //"exit" menu item handler (called also if user press "close" button of window)
-void quit_handler ()
+static void quit_handler ()
 {
 	//if socket for data exchange isn't closed then close it
 	if (sock != 0)
@@ -454,7 +455,7 @@ void quit_handler ()
 }
 
 //key pressing handler for catching "enter" press
-gboolean talk_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+static gboolean talk_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
 	//if user hit "enter" then read and send message
 	if (event->keyval == GDK_KEY_Return)
@@ -463,7 +464,7 @@ gboolean talk_keypress (GtkWidget *widget, GdkEventKey *event, gpointer user_dat
 	return FALSE;
 }
 
-void send_button_handler ()
+static void send_button_handler ()
 {
 	GtkTextIter end_iter;	//end iterator
 
@@ -478,7 +479,7 @@ void send_button_handler ()
 //-------------------------------------------------------------------------------------------------
 
 //creation of talk window
-void show_talk ()
+static void show_talk ()
 {
 	GtkBuilder *builder;	//pointer to service structure (free after work)
 	GtkWidget *talk_win = NULL, *curr_widget;
@@ -554,202 +555,202 @@ void show_talk ()
 
 //--"LAUNCH" BUTTON (CONNECTION SETTINGS WINDOW) HANDLER-------------------------------------------
 
-int launch_handler (GtkWidget *settings_win)
+static int launch_handler (GtkWidget *settings_win)
 {
 
-//variables for dialog window creation
-GtkWidget *dialog;
-GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+	//variables for dialog window creation
+	GtkWidget *dialog;
+	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
 
-//pointer to string readed from input field
-const gchar *server_address = NULL;
+	//pointer to string readed from input field
+	const gchar *server_address = NULL;
 
-//pointers to strings readed from comboboxes (free after work)
-gchar *net_role = NULL, *keys = NULL, *net_protocol_char = NULL;
+	//pointers to strings readed from comboboxes (free after work)
+	gchar *net_role = NULL, *keys = NULL, *net_protocol_char = NULL;
 
-int net_protocol_int, fresult;	//network protocol, return of called function
-unsigned int serv_port;		//server port
+	int net_protocol_int, fresult;	//network protocol, return of called function
+	unsigned int serv_port;		//server port
 
-//get data from combobox that sets a mode of work with persistent keys
-keys = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(keys_combo));
+	//get data from combobox that sets a mode of work with persistent keys
+	keys = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(keys_combo));
 
-//get data from input field with companion's name
-companion_name = gtk_entry_get_text(GTK_ENTRY(companion_name_txt));
-//if companion's name wasn't entered then use default value
-if (strcmp(companion_name, "") == 0) companion_name = "Companion";
+	//get data from input field with companion's name
+	companion_name = gtk_entry_get_text(GTK_ENTRY(companion_name_txt));
+	//if companion's name wasn't entered then use default value
+	if (strcmp(companion_name, "") == 0) companion_name = "Companion";
 
-/*selected mode of work with persistent keys is a generation of files with persistent keys? call a
-procedure for it*/
-if (strcmp(keys, "write to files") == 0) {
+	/*selected mode of work with persistent keys is a generation of files with persistent keys?
+	call a procedure for it*/
+	if (strcmp(keys, "write to files") == 0) {
 
-	g_free(keys);
+		g_free(keys);
 	
-	//does persistent keys for current companion already exists on disk?
-	fresult = is_keys_exist(settings_win);
-	if (fresult == 1) {
+		//does persistent keys for current companion already exists on disk?
+		fresult = is_keys_exist(settings_win);
+		if (fresult == 1) {
 
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-                                		GTK_BUTTONS_OK,
-                                 		"Error: failed to generate persistent keys for talking with %s.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-		return 1;
+			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
+                                			GTK_BUTTONS_OK,
+                                 			"Error: failed to generate persistent keys for talking with %s.",
+											companion_name);
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return 1;
 
-		}
-	else if (fresult == 2) {
+			}
+		else if (fresult == 2) {
 		
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_INFO,
-                                		GTK_BUTTONS_OK,
-                                 		"Rewriting of persistent keys for talking with %s has been aborted.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-		return 0;
+			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_INFO,
+    	                            		GTK_BUTTONS_OK,
+    	                             		"Rewriting of persistent keys for talking with %s has been aborted.",
+											companion_name);
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+			return 0;
 		
-		}
+			}
 	
-	//call a function for generation of files with persistent keys
-	if (generate_key_files(companion_name) == -1) {
+		//call a function for generation of files with persistent keys
+		if (generate_key_files(companion_name) == -1) {
 	
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-                                		GTK_BUTTONS_OK,
-                                 		"Error: failed to generate persistent keys for talking with %s.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
+			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
+                                			GTK_BUTTONS_OK,
+                                 			"Error: failed to generate persistent keys for talking with %s.",
+											companion_name);
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
 		
-		}	//generate_key_files
-	else {
+			}	//generate_key_files
+		else {
 	
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_INFO,
-                                		GTK_BUTTONS_OK,
-                                 		"Persistent keys for talking with %s successfully saved.\n\n"
-										"Make an exchange of public keys via trusted channel.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
+			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_INFO,
+                               		 		GTK_BUTTONS_OK,
+                               				"Persistent keys for talking with %s successfully saved.\n\n"
+											"Make an exchange of public keys via trusted channel.",
+											companion_name);
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
 		
-		}	//else dialog
+			}	//else dialog
 
 	}	//strcmp(write to files)
 
-//if another mode of work with persistent keys was choosen
-else {
+	//if another mode of work with persistent keys was choosen
+	else {
 
-	//get data from input fields
-	server_address = gtk_entry_get_text(GTK_ENTRY(server_address_txt));
-	serv_port = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(port_spin));
+		//get data from input fields
+		server_address = gtk_entry_get_text(GTK_ENTRY(server_address_txt));
+		serv_port = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(port_spin));
 
-	//get data from another comboboxes
-	net_role = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(net_role_combo));
-	net_protocol_char = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(net_protocol_combo));
+		//get data from another comboboxes
+		net_role = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(net_role_combo));
+		net_protocol_char = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(net_protocol_combo));
 
-	//load persistent keys for talking with current companion from files if user choosed that
-	if (strcmp(keys, "load from files") == 0) {
+		//load persistent keys for talking with current companion from files if user choosed that
+		if (strcmp(keys, "load from files") == 0) {
 	
-		if (load_key_files(companion_name, (unsigned char **)&Mm_sp, (unsigned char **)&Mm_ss,
-							(unsigned char **)&Mx_sp, (unsigned char **)&Mm_cp,
-							(unsigned char **)&Mm_cs, (unsigned char **)&Mx_cp,
-							(unsigned char **)&Mh) == 1) {
+			if (load_key_files(companion_name, (unsigned char **)&Mm_sp, (unsigned char **)&Mm_ss,
+								(unsigned char **)&Mx_sp, (unsigned char **)&Mm_cp,
+								(unsigned char **)&Mm_cs, (unsigned char **)&Mx_cp,
+								(unsigned char **)&Mh) == 1) {
 							
+				dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
+    	    	                        		GTK_BUTTONS_OK,
+    	    	                        		"Error: failed to load persistent keys for talking with %s from files.",
+												companion_name);
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+			
+				return 1;
+				}	//load_key_files
+				
+			}	//strcmp(load from files)
+		
+		
+		//use a network protocol choosen by user
+		if (strcmp(net_protocol_char, "IPv4") == 0)
+			net_protocol_int = AF_INET;
+		else
+			net_protocol_int = AF_INET6;
+		
+		g_free(net_protocol_char);
+		
+		//make a connection as a server or client depending on user's choice
+		if (strcmp(net_role, "server") == 0)
+			sock = go_server(serv_port, net_protocol_int);
+		else
+			sock = go_client(server_address, serv_port, net_protocol_int);
+		
+		g_free(net_role);
+		
+		//if a critical error occured then stop this handler
+		if (sock == 1) {
 			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-        	                        		GTK_BUTTONS_OK,
-        	                        		"Error: failed to load persistent keys for talking with %s from files.",
+    	                            		GTK_BUTTONS_OK,
+    	                            		"Error: failed to make connection with %s.",
 											companion_name);
 			gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
-			
+	
+			g_free(keys);
+		
 			return 1;
-			}	//load_key_files
+			}
+
+		//make an exchange of persistent keys via network if user choosed that
+		if (strcmp(keys, "exchange via network") == 0) {
+			if (net_key_exchange(sock, (unsigned char **)&Mm_sp, (unsigned char **)&Mm_ss,
+								(unsigned char **)&Mx_sp, (unsigned char **)&Mm_cp,
+								(unsigned char **)&Mm_cs, (unsigned char **)&Mx_cp,
+								(unsigned char **)&Mh) == 1) {
+
+				dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
+    	    	                        		GTK_BUTTONS_OK,
+    	    	                        		"Error: failed to make an exchange of persistent keys with %s via network.",
+												companion_name);
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+			
+				g_free(keys);
+			
+				return 1;
+				}	//net_key_exchange
 				
-		}	//strcmp(load from files)
-		
-		
-	//use a network protocol choosen by user
-	if (strcmp(net_protocol_char, "IPv4") == 0)
-		net_protocol_int = AF_INET;
-	else
-		net_protocol_int = AF_INET6;
-		
-	g_free(net_protocol_char);
-		
-	//make a connection as a server or client depending on user's choice
-	if (strcmp(net_role, "server") == 0)
-		sock = go_server(serv_port, net_protocol_int);
-	else
-		sock = go_client(server_address, serv_port, net_protocol_int);
-		
-	g_free(net_role);
-		
-	//if a critical error occured then stop this handler
-	if (sock == 1) {
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-                                		GTK_BUTTONS_OK,
-                                		"Error: failed to make connection with %s.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
+			}	//strcmp(exchange via network)
 	
 		g_free(keys);
+	
+		//generate session keys and exchange them
+		crypto_box_beforenm(M_ckey, Mx_cp, Mm_cs);
+		if (create_session_keys(sock, Mm_ss, Mx_sp, M_ckey, (unsigned char **)&m_ss,
+								(unsigned char **)&x_sp, (unsigned char **)&ckey,
+								(unsigned char **)&m_n,	(unsigned char **)&x_n,
+								(unsigned char **)Sh) == 1) {
 		
-		return 1;
-		}
-
-	//make an exchange of persistent keys via network if user choosed that
-	if (strcmp(keys, "exchange via network") == 0) {
-		if (net_key_exchange(sock, (unsigned char **)&Mm_sp, (unsigned char **)&Mm_ss,
-							(unsigned char **)&Mx_sp, (unsigned char **)&Mm_cp,
-							(unsigned char **)&Mm_cs, (unsigned char **)&Mx_cp,
-							(unsigned char **)&Mh) == 1) {
-
 			dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-        	                        		GTK_BUTTONS_OK,
-        	                        		"Error: failed to make an exchange of persistent keys with %s via network.",
+    	    	                        	GTK_BUTTONS_OK,
+    	    	                        	"Error: failed to make exchange of session keys with %s via network.",
 											companion_name);
 			gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
-			
-			g_free(keys);
-			
+		
 			return 1;
-			}	//net_key_exchange
-				
-		}	//strcmp(exchange via network)
-	
-	g_free(keys);
-	
-	//generate session keys and exchange them
-	crypto_box_beforenm(M_ckey, Mx_cp, Mm_cs);
-	if (create_session_keys(sock, Mm_ss, Mx_sp, M_ckey, (unsigned char **)&m_ss,
-							(unsigned char **)&x_sp, (unsigned char **)&ckey,
-							(unsigned char **)&m_n,	(unsigned char **)&x_n,
-							(unsigned char **)Sh) == 1) {
+			}	//create_session_keys
 		
-		dialog = gtk_message_dialog_new(GTK_WINDOW(settings_win), flags, GTK_MESSAGE_WARNING,
-        	                        	GTK_BUTTONS_OK,
-        	                        	"Error: failed to make exchange of session keys with %s via network.",
-										companion_name);
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-		
-		return 1;
-		}	//create_session_keys
-		
-	//if secure connection was established then hide this window and show talk window instead
-	gtk_widget_hide(settings_win);
-	show_talk();
+		//if secure connection was established then hide this window and show talk window instead
+		gtk_widget_hide(settings_win);
+		show_talk();
 
-	}	//else (mode of wirk with persistent keys is not "write to files")
+		}	//else (mode of wirk with persistent keys is not "write to files")
 
-return 0;
+	return 0;
 
 }
 
 //--CONNECTION SETTINGS WINDOW---------------------------------------------------------------------
 
 //'value in "network role" combobox has changed' event handler
-void net_role_changed ()
+static void net_role_changed ()
 {
 	//pointer to string readed from combobox (free after work)
 	gchar *net_role = NULL;
@@ -766,7 +767,7 @@ void net_role_changed ()
 }
 
 //'value in "keys" combobox has changed' event handler
-void keys_changed ()
+static void keys_changed ()
 {
 	//pointer to string readed from combobox (free after work)
 	gchar *keys = NULL;
@@ -795,9 +796,9 @@ void keys_changed ()
 	g_free(keys);
 }
 
-//-------------------------------------------------------------------------------------------------
+//--PROGRAM INITIALIZATION-------------------------------------------------------------------------
 
-int main(int argc, char *argv[])
+extern int main(int argc, char *argv[])
 {
 	GtkBuilder *builder;						//pointer to service structure (free after work)
 	GtkWidget *settings_win = NULL, *button;	//pointers to window and button
