@@ -16,6 +16,6 @@ GTK+ >= 3.10: libgtk-3-0 libgtk-3-bin libgtk-3-common libgtk-3-dev
 * file sending is just a must-have feature
 
 ## Contributors
-Developer: Zubov Ivan // anotherdiskmag on gooooooogle mail
+Developer: Zuboff Ivan // anotherdiskmag on gooooooogle mail
 
 Testing, ideas: Yelmanov Andrew, Danilenko Egor

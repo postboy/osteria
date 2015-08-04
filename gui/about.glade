@@ -10,7 +10,7 @@
     <property name="gravity">north</property>
     <property name="program_name">Osteria 0.09</property>
     <property name="version">secure point-to-point messenger</property>
-    <property name="copyright" translatable="yes">(c) 2014-2015, Zubov Ivan</property>
+    <property name="copyright" translatable="yes">(c) 2014-2015, Zuboff Ivan</property>
     <property name="website">https://github.com/postboy/osteria</property>
     <property name="website_label" translatable="yes">repository on GitHub</property>
     <property name="logo_icon_name">mail-forward</property>
