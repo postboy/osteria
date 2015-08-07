@@ -7,38 +7,64 @@ License: public domain
 
 //--RANDOM DATA GENERATION FOR TWEETNACL ITSELF AND FOR NONCE GENERATION---------------------------
 
+//Windows-only
+#ifdef WIN32
+
+	extern void randombytes (unsigned char *x,unsigned long long xlen)
+	{
+		//initialize CryptoAPI only once
+		if (hCryptProv != -1)
+			if (CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0))
+				printf("CryptAcquireContext succeeded.\n");
+			else {
+				printf("CryptAcquireContext() error: %x\n", GetLastError());
+				return;
+				}
+			
+		if (CryptGenRandom(hCryptProv, xlen, *x) == 0) {
+			printf("CryptGenRandom() error: %x\n", GetLastError());
+			return;
+			};
+
+	}
+
+//*nix-only
+#else
+
 /*
 Original: http://hyperelliptic.org/nacl/nacl-20110221.tar.bz2, file /randombytes/devurandom.c from
 NaCl library version 20080713
 */
 
-static int fd = -1;
+	static int fd = -1;
 
-extern void randombytes (unsigned char *x,unsigned long long xlen)
-{
-  int i;
+	extern void randombytes (unsigned char *x,unsigned long long xlen)
+	{
+	  int i;
 
-  if (fd == -1) {
-    for (;;) {
-      fd = open("/dev/urandom",O_RDONLY);
-      if (fd != -1) break;
-      sleep(1);
-    }
-  }
+	  if (fd == -1) {
+	    for (;;) {
+	      fd = open("/dev/urandom",O_RDONLY);
+	      if (fd != -1) break;
+	      sleep(1);
+	    }
+	  }
 
-  while (xlen > 0) {
-    if (xlen < 1048576) i = xlen; else i = 1048576;
+	  while (xlen > 0) {
+    	if (xlen < 1048576) i = xlen; else i = 1048576;
+    	
+    	i = read(fd,x,i);
+    	if (i < 1) {
+    	  sleep(1);
+    	  continue;
+    	}
 
-    i = read(fd,x,i);
-    if (i < 1) {
-      sleep(1);
-      continue;
-    }
+    	x += i;
+    	xlen -= i;
+	  }
+	}
 
-    x += i;
-    xlen -= i;
-  }
-}
+#endif
 
 //--TWEETNACL LIBRARY------------------------------------------------------------------------------
 

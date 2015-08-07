@@ -13,9 +13,8 @@ Please note that project is not offering backward compatibility feature now!
 * supports both IPv4 and IPv6
 
 ## Platform
-* GNU/Linux
-* other *nix (porting should be very easy)
-* Windows (porting shouldn't be hard: you have to use Winsock, change a code for random number generation and asynchronous reading from socket for data exchange)
+* GNU/Linux (tested)
+* other *nix and Windows (not tested; porting should be easy because code for that platforms is already incluided in sources)
 
 ## Dependencies
 GTK+ >= 3.10

@@ -8,31 +8,44 @@ License: public domain
 #define TWEETNACL_H
 
 //headers for all Osteria source files:
-#include <string.h>
-#include <arpa/inet.h>
+
+//Windows only
+#ifdef WIN32
+#include <windows.h>
+#include <Wincrypt.h>
+#include <windef.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "Ws2_32.lib")
+HCRYPTPROV hCryptProv = -1;
+
+//*nix only
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#define WSAGetLastError() (errno)
+#define WSA(err) (err)
+#define closesocket(fd) close(fd)
+#endif
+
+//should be generic (not tested well!)
+#include <stdio.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <time.h>
+#include <inttypes.h>
+#include <string.h>
 #include <locale.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <sys/stat.h>
 #include <gtk/gtk.h>
 
 #include "poison.h"		//we need to include it to ban unsafe C functions
-
-/*
-by the way, this headers was already incluided in headers above (main suspect is gtk.h); anyway,
-someone may need this list for re-using Osteria code:
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <time.h>
-#include <inttypes.h>
-*/
-
-//#include <winsock.h> - will need it for porting to Windows
 
 //constants for all Osteria's source files:
 #define maxmlen 4000	//maximal length of user's text message

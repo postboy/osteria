@@ -23,11 +23,16 @@ static void *get_in_addr (struct sockaddr *sa)
 extern int go_server (unsigned int serv_port, int net_protocol)
 {
 
+#ifdef sun
+const char yes='1';		//variable for function setsockopt(), Solaris only
+#else
+const int yes=1;		//variable for function setsockopt(), all other OSes
+#endif
+
 char serv_port_str[10], cliaddr[INET6_ADDRSTRLEN];
 //server port as string, client address as string
 int fresult, listensock, sock, cliport;
 //return of called function, sockets for connection and data exchange, cleint port number
-const int yes=1;						//variable for function setsockopt()
 struct addrinfo *servinfo, hints, *p;
 //array of info about server, socket parameters, pointer to next record in servinfo
 struct sockaddr_storage clinfo;			//info about client
@@ -40,7 +45,7 @@ printf("Launching server on %i port...\n",serv_port);
 
 //setting up socket
 memset(&hints, 0, sizeof hints);		//clear a record with socket parameters
-hints.ai_family = net_protocol;					//use IPv4 or IPv6 depending on user's choice
+hints.ai_family = net_protocol;			//use IPv4 or IPv6 depending on user's choice
 hints.ai_socktype = SOCK_STREAM;		//use stream socket and TCP protocol
 hints.ai_flags = AI_PASSIVE;			//get IP address of this computer automatically
 

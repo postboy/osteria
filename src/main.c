@@ -529,7 +529,13 @@ static void show_talk ()
 	g_object_unref(G_OBJECT(builder));
 
 	//create a channel for unblocking reading from socket for data exchange
-	sock_GIO = g_io_channel_unix_new(sock);
+	
+	#ifdef WIN32
+		sock_GIO = g_io_channel_win32_new_socket (sock);
+	#else
+		sock_GIO = g_io_channel_unix_new(sock);
+	#endif
+	
 
 	//set it's encoding to NULL which means "data type - binary data"
 	if (g_io_channel_set_encoding(sock_GIO, NULL, NULL) != G_IO_STATUS_NORMAL)
@@ -805,6 +811,33 @@ extern int main(int argc, char *argv[])
 
 	printf("Osteria %s, debug output\n\n", version);
 
+	//Windows-only
+	#ifdef WIN32
+    	WSADATA x;
+    	WORD wVersionRequested;
+    	int err;
+    	
+    	//use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h
+    	wVersionRequested = MAKEWORD(2, 2);
+
+		err = WSAStartup(wVersionRequested, &wsaData);
+  	  	if (err != 0) {
+  	    	//tell the user that we could not find a usable Winsock DLL
+	        printf("WSAStartup(2,2) failed with error: %d\n", err);
+    	    return 1;
+    		}
+
+		//confirm that the WinSock DLL supports 2.2
+    	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+    	    //tell the user that we could not find a usable WinSock DLL
+    	    printf("Could not find a usable version of Winsock.dll\n");
+    	    WSACleanup();
+    	    return 1;
+    		}
+   		else
+        	printf("The Winsock 2.2 dll was found okay\n");        	
+	#endif
+
 	//try to make a program able to understand all locales
 	if (setlocale(LC_ALL, "") == NULL) fprintf(stderr, "setlocale() error\n");
 
@@ -849,6 +882,15 @@ extern int main(int argc, char *argv[])
 
 	//begin handling of windows events
 	gtk_main();
+
+	#ifdef WIN32
+		//in Windows we are done with Winsock and CryptoAPI
+		WSACleanup();
+		if (CryptReleaseContext(hCryptProv,0) == 0) {
+			printf("CryptReleaseContext() error: %x\n", GetLastError());
+			return 1;
+			}
+	#endif
 
 	return 0;
 }
