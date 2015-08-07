@@ -18,7 +18,8 @@ Please note that project is not offering backward compatibility feature now!
 * Windows (porting shouldn't be hard: you have to use Winsock, change a code for random number generation and asynchronous reading from socket for data exchange)
 
 ## Dependencies
-GTK+ >= 3.10: libgtk-3-0 libgtk-3-bin libgtk-3-common libgtk-3-dev
+GTK+ >= 3.10
+On *nix it means libgtk-3-0 libgtk-3-bin libgtk-3-common libgtk-3-dev packets.
 
 ## Todo
 * file sending is just a must-have feature
