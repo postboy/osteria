@@ -20,7 +20,7 @@ Please note that project is not offering backward compatibility feature now!
 ## Dependencies
 GTK+ >= 3.10
 
-On *nix it means libgtk-3-0 libgtk-3-bin libgtk-3-common libgtk-3-dev packets.
+On *nix it means `libgtk-3-0 libgtk-3-bin libgtk-3-common libgtk-3-dev` packets.
 
 ## Todo
 * file sending is just a must-have feature
