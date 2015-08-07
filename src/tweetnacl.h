@@ -18,6 +18,7 @@ License: public domain
 #include <ws2tcpip.h>
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "Ws2_32.lib")
+#define close(fd) closesocket(fd)
 HCRYPTPROV hCryptProv = -1;
 
 //*nix only
@@ -28,9 +29,6 @@ HCRYPTPROV hCryptProv = -1;
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#define WSAGetLastError() (errno)
-#define WSA(err) (err)
-#define closesocket(fd) close(fd)
 #endif
 
 //should be generic (not tested well!)
