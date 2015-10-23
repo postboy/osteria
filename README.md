@@ -2,8 +2,6 @@
 This project offers an example code in fields of network programming using [Berkeley sockets] (https://en.wikipedia.org/wiki/Berkeley_sockets), GUI programming using [GTK+] (http://www.gtk.org) and applied cryptography programming using [TweetNaCl] (http://tweetnacl.cr.yp.to).
 Licence: [BSD 2-clause] (http://opensource.org/licenses/bsd-license.php) with public domain parts.
 
-Please note that project is not offering backward compatibility feature now!
-
 ## Features
 * direct point-to-point connection of two users via global or local network
 * all user messages are protected by strong cryptographic functions written by well-known professionals

@@ -823,14 +823,14 @@ extern int main(int argc, char *argv[])
 		err = WSAStartup(wVersionRequested, &wsaData);
   	  	if (err != 0) {
   	    	//tell the user that we could not find a usable Winsock DLL
-	        printf("WSAStartup(2,2) failed with error: %d\n", err);
+	        fprintf(stderr, "WSAStartup(2,2) failed with error: %d\n", err);
     	    return 1;
     		}
 
 		//confirm that the WinSock DLL supports 2.2
     	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
     	    //tell the user that we could not find a usable WinSock DLL
-    	    printf("Could not find a usable version of Winsock.dll\n");
+    	    fprintf(stderr, "Could not find a usable version of Winsock.dll\n");
     	    WSACleanup();
     	    return 1;
     		}
@@ -887,7 +887,7 @@ extern int main(int argc, char *argv[])
 		//in Windows we are done with Winsock and CryptoAPI
 		WSACleanup();
 		if (CryptReleaseContext(hCryptProv,0) == 0) {
-			printf("CryptReleaseContext() error: %x\n", GetLastError());
+			fprintf(stderr, "CryptReleaseContext() error: %x\n", GetLastError());
 			return 1;
 			}
 	#endif
