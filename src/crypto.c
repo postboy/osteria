@@ -58,7 +58,7 @@ extern int generate_key_files (const char *companion_name)
 FILE *fp;			//file variable
 char path[200], path_master[200] = "keys/";
 //current path to file or folder, master path to folder
-size_t really_recvieved;	//number of really written bytes
+size_t really_written;	//number of really written bytes
 
 //signatures, we: public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES];
@@ -96,14 +96,14 @@ if ((fp = fopen(path, "wb")) == NULL) {
 	}
 
 //write our signature and encryption public keys in file
-really_recvieved = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+really_written = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_written < crypto_sign_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: cannot write m_sp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+really_written = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_written < crypto_box_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: cannot write m_cp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
@@ -134,14 +134,14 @@ if ((fp = fopen(path, "wb")) == NULL) {
 	}
 
 //write our signature and encryption secret keys in file
-really_recvieved = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+really_written = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_written < crypto_sign_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: cannot write m_ss in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+really_written = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_written < crypto_box_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: cannot write m_cs in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
@@ -178,7 +178,7 @@ extern int save_current_keys (const char *companion_name, unsigned char m_sp[cry
 FILE *fp;			//file variable
 char path[200], path_master[200] = "keys/";
 //current path to file or folder, master path to folder
-size_t really_recvieved;	//number of really written bytes
+size_t really_written;	//number of really written bytes
 
 //--write our public keys--------------------------------------------------------------------------
 
@@ -206,14 +206,14 @@ if ((fp = fopen(path, "wb")) == NULL) {
 	}
 
 //write our signature and encryption public keys in file
-really_recvieved = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+really_written = fwrite(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_written < crypto_sign_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: can't write m_sp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+really_written = fwrite(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_written < crypto_box_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: can't write m_cp in my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
@@ -244,14 +244,14 @@ if ((fp = fopen(path, "wb")) == NULL) {
 	}
 
 //write our signature and encryption secret keys in file
-really_recvieved = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+really_written = fwrite(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_written < crypto_sign_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: can't write m_ss in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+really_written = fwrite(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_written < crypto_box_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: can't write m_cs in my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
@@ -282,14 +282,14 @@ if ((fp = fopen(path, "wb")) == NULL) {
 	}
 
 //write companion's signature and encryption public keys in file
-really_recvieved = fwrite(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+really_written = fwrite(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_written < crypto_sign_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: can't write x_sp in ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fwrite(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+really_written = fwrite(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_written < crypto_box_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: can't write x_cp in ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
@@ -315,7 +315,7 @@ extern int load_key_files (const char *companion_name, unsigned char *out_m_sp[c
 FILE *fp;				//file variable
 char path[200], path_master[200] = "keys/";
 //current path to file or folder, master path to folder
-size_t really_recvieved;		//number of really readed bytes
+size_t really_readed;		//number of really readed bytes
 struct stat st = {0};	//structure for stat() function
 
 
@@ -368,14 +368,14 @@ if ((fp = fopen(path, "rb")) == NULL) {
 	}
 
 //load our signature and encryption public keys from file
-really_recvieved = fread(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+really_readed = fread(m_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_readed < crypto_sign_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: failed to read m_sp from my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fread(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+really_readed = fread(m_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_readed < crypto_box_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: failed to read m_cp from my_public/public.keys file.\n");
 	fclose(fp);
     return 1;
@@ -405,14 +405,14 @@ if ((fp = fopen(path, "rb")) == NULL) {
 	}
 
 //load our signature and encryption secret keys from file
-really_recvieved = fread(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_sign_SECRETKEYBYTES) {
+really_readed = fread(m_ss, 1, crypto_sign_SECRETKEYBYTES, fp);
+if (really_readed < crypto_sign_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: failed to read m_ss from my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fread(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
-if (really_recvieved < crypto_box_SECRETKEYBYTES) {
+really_readed = fread(m_cs, 1, crypto_box_SECRETKEYBYTES, fp);
+if (really_readed < crypto_box_SECRETKEYBYTES) {
 	fprintf(stderr, "Error: failed to read m_cs from my_secret/secret.keys file.\n");
 	fclose(fp);
     return 1;
@@ -442,14 +442,14 @@ if ((fp = fopen(path, "rb")) == NULL) {
 	}
 
 //load companion's signature and encryption public keys from file
-really_recvieved = fread(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_sign_PUBLICKEYBYTES) {
+really_readed = fread(x_sp, 1, crypto_sign_PUBLICKEYBYTES, fp);
+if (really_readed < crypto_sign_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: failed to read x_sp from ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
 	}
-really_recvieved = fread(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
-if (really_recvieved < crypto_box_PUBLICKEYBYTES) {
+really_readed = fread(x_cp, 1, crypto_box_PUBLICKEYBYTES, fp);
+if (really_readed < crypto_box_PUBLICKEYBYTES) {
 	fprintf(stderr, "Error: failed to read x_cp from ext_public/public.keys file.\n");
 	fclose(fp);
     return 1;
@@ -487,7 +487,7 @@ extern int net_key_exchange (int sock, unsigned char *out_m_sp[crypto_sign_PUBLI
 
 unsigned char fm[2*crypto_sign_PUBLICKEYBYTES+2*crypto_sign_PUBLICKEYBYTES];
 //message with public keys
-unsigned long long really_recvieved;	//number of really recieved bytes
+unsigned long long really_received;	//number of really received bytes
 
 //signatures, we: public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES],
@@ -515,9 +515,9 @@ if (sendall(sock, (char *)fm, (crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBY
 	return 1;
 	}
 
-//recieve companion's signature public key
-really_recvieved = recv(sock, x_sp, crypto_sign_PUBLICKEYBYTES, MSG_WAITALL);
-switch(really_recvieved)
+//receive companion's signature public key
+really_received = recv(sock, x_sp, crypto_sign_PUBLICKEYBYTES, MSG_WAITALL);
+switch(really_received)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;};
@@ -526,9 +526,9 @@ switch(really_recvieved)
 		return 1;};
 	}
 
-//recieve companion's encryption public key
-really_recvieved = recv(sock, x_cp, crypto_box_PUBLICKEYBYTES, MSG_WAITALL);
-switch(really_recvieved)
+//receive companion's encryption public key
+really_received = recv(sock, x_cp, crypto_box_PUBLICKEYBYTES, MSG_WAITALL);
+switch(really_received)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;
@@ -571,8 +571,8 @@ extern int create_session_keys (int sock, unsigned char Mm_ss[crypto_sign_SECRET
 
 unsigned char m[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES], fm[varmlen];
 //message with public keys (original, after signing and encryption with persistent keys)
-unsigned long long mlen, really_recvieved;
-//size of original and final messages, number of really recieved bytes
+unsigned long long mlen, really_received;
+//size of original and final messages, number of really received bytes
 
 //signatures, we: session public and secret keys
 unsigned char m_sp[crypto_sign_PUBLICKEYBYTES], m_ss[crypto_sign_SECRETKEYBYTES],
@@ -626,9 +626,9 @@ if (sendall(sock, (char *)fm, (crypto_box_NONCEBYTES+tmlen)) == -1) {
 crypto_hash(h, tm, tmlen);
 memcpy(m_n, h, crypto_box_NONCEBYTES);
 
-//recieve a first companion's nonce
-really_recvieved = recv(sock, x_n, crypto_box_NONCEBYTES, MSG_WAITALL);
-switch(really_recvieved)
+//receive a first companion's nonce
+really_received = recv(sock, x_n, crypto_box_NONCEBYTES, MSG_WAITALL);
+switch(really_received)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		return 0;};
@@ -637,9 +637,9 @@ switch(really_recvieved)
 		return 1;};
 	}
 
-//recieve a message with session public keys, decrypt it, check it's signature and use that keys
-really_recvieved = recv(sock, tm, tmlen, MSG_WAITALL);
-switch(really_recvieved)
+//receive a message with session public keys, decrypt it, check it's signature and use that keys
+really_received = recv(sock, tm, tmlen, MSG_WAITALL);
+switch(really_received)
 	{case 0: {
 		printf("\nCompanion closed the connection.\n");
 		if (close(sock) != 0) {
@@ -660,21 +660,21 @@ memcpy(x_n_tmp, h, crypto_box_NONCEBYTES);
 
 //first 16 bytes should be zero bytes for successful decryption, add them
 bzero(&cm, crypto_box_BOXZEROBYTES);
-cmlen = really_recvieved+crypto_box_BOXZEROBYTES;
-memcpy(cm+crypto_box_BOXZEROBYTES, tm, really_recvieved);
+cmlen = really_received+crypto_box_BOXZEROBYTES;
+memcpy(cm+crypto_box_BOXZEROBYTES, tm, really_received);
 
 //try to decrypt message
 if (crypto_box_open_afternm(tm, cm, cmlen, x_n, M_ckey) == -1) {
-	fprintf(stderr, "Error: failed to decrypt recieved message with session keys.\n");
+	fprintf(stderr, "Error: failed to decrypt received message with session keys.\n");
 	return 1;
 	}
 else {
 	//message has been successfully decrypted, delete first 32 zero bytes in the beginning
-	memcpy(sm, tm+crypto_box_ZEROBYTES, really_recvieved-crypto_box_BOXZEROBYTES);
+	memcpy(sm, tm+crypto_box_ZEROBYTES, really_received-crypto_box_BOXZEROBYTES);
 
 	//check a signature of decrypted message
-	if (crypto_sign_open(tm, &mlen, sm, really_recvieved-crypto_box_BOXZEROBYTES, Mx_sp) == -1) {
-		fprintf(stderr, "Error: recieved message with session keys has wrong signature.\n");
+	if (crypto_sign_open(tm, &mlen, sm, really_received-crypto_box_BOXZEROBYTES, Mx_sp) == -1) {
+		fprintf(stderr, "Error: received message with session keys has wrong signature.\n");
 		return 1;
 		}
 	else {
