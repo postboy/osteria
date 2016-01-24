@@ -201,7 +201,7 @@ strncat(path, "/public.keys", 12);
 
 //try to open "public.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Error: can't open my_public/public.keys file file for writing.\n");
+	fprintf(stderr, "Error: can't open my_public/public.keys file for writing.\n");
     return 1;
 	}
 
@@ -239,7 +239,7 @@ strncat(path, "/secret.keys", 12);
 
 //try to open "secret.keys" binary file for writing
 if ((fp = fopen(path, "wb")) == NULL) {
-	fprintf(stderr, "Error: can't open my_secret/secret.keys file file for writing.\n");
+	fprintf(stderr, "Error: can't open my_secret/secret.keys file for writing.\n");
     return 1;
 	}
 
